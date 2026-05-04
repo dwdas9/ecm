@@ -2,7 +2,7 @@
 # Dwaipayan Das
 ### ECM Architect · OpenText Captiva & Documentum · Azure · Senior Manager
 
-📍 Toronto, Canada · Canadian PR · Singapore PR  
+📍 Toronto, Canada · Canadian PR
 🔗 [LinkedIn](https://www.linkedin.com/in/dwds/) · das.d@hotmail.com
 
 ---
