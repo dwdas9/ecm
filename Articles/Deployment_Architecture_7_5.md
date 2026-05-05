@@ -31,9 +31,11 @@ The foundation of this feature gating is a hidden column in the Captiva Administ
 
 This column is hidden by default, but can be surfaced through the **Column Manager** dialog in the Processes view. The decision to hide it reflects that it's a diagnostic artifact-end users should not need to know this classification. However, developers and administrators must understand it to navigate feature availability.
 
+![](images/20260505184647.png)
 ![EMC Captiva Administrator Column Manager showing the Legacy column selection](images/fig_legacy_column.png)
 *Figure 1: The Column Manager dialog in EMC Captiva Administrator displays available columns for the Processes view. The "Legacy" column (highlighted in red) indicates process type: checked for legacy processes, unchecked for CodeBehind-enabled processes.*
 
+![](images/20260505184746.png)
 ---
 
 ## Feature Availability Matrix
@@ -66,6 +68,7 @@ The "Add Upgraded Process" feature is a delete-and-replace mechanism. When you i
 4. Deploys the new file
 5. Applies the upgrade to selected servers in a ScaleServer group
 
+![](images/20260505184828.png)
 ![Upgrade Process dialog showing process selection and server selection interface](images/fig_upgrade_process.png)
 *Figure 2: The Upgrade Process dialog in Captiva Administrator. Users select a replacement IAP or IPP file, optionally back up the current process, and select target servers from the Available Servers and Selected Servers lists.*
 
@@ -92,6 +95,7 @@ The "Add Process" operation (labeled "Install Process" in the UI) deploys a sing
 - Target servers (multi-select)
 - Optional description field
 
+![](images/20260505184848.png)
 ![Install Process dialog showing process file selection and multi-server deployment options](images/fig_install_process.png)
 *Figure 3: The Install Process dialog in Captiva Administrator. It displays an error message indicating a CodeBehind process ("The process was compiled in CFD. Use CFD to deploy it"), demonstrates the file path selection field, server selection interface, and description area.*
 
@@ -153,6 +157,7 @@ The Rename operation changes the deployed process name on the server. For legacy
 
 For CodeBehind processes, the Name field in the Process Settings dialog is **read-only**. Attempting to edit it yields no effect.
 
+![](images/20260505184922.png)
 ![Process Settings dialog showing the read-only Name field for a CodeBehind process](images/fig_process_settings_readonly.png)
 *Figure 4: The Process Settings dialog displays a CodeBehind process with the Name field marked as read-only. Additional fields show compile time, InputAccel process version, original capture flow name, and process compiler version. The name field cannot be edited for CodeBehind processes.*
 
@@ -167,7 +172,7 @@ Designer manages this constraint automatically: if you rename a process in Captu
 **Availability:** Legacy processes only
 
 The Copy Process operation deploys a single process from one server to multiple servers within a ScaleServer group. The UI presents two lists-Available Servers and Selected Servers-with directional arrows to move servers between them.
-
+![](images/20260505184932.png)
 ![Copy Process dialog showing multi-server deployment interface](images/fig_copy_process.png)
 *Figure 5: The Copy Process dialog in Captiva Administrator. It shows a process being copied (PERF(75)-2014-11-06 from KT-2012-IAS1), with Available Servers and Selected Servers lists and navigation buttons to move servers between them.*
 
@@ -181,6 +186,7 @@ For legacy processes, the Administrator's Copy operation is the mechanism to pro
 
 **Availability:** Legacy processes (full) | CodeBehind processes (Single Setup Value only)
 
+![](images/20260505184944.png)
 This is where the migration story becomes most visible. Settings management has been completely reimplemented between legacy and CodeBehind processes.
 
 ### Legacy Copy and Paste Settings
