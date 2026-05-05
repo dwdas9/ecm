@@ -227,7 +227,6 @@ The reserved values `IATaskRouting` and `IADepartments` still control department
 {% endtabs %}
 
 ---
-
 ### 3.3 Where Decisions Are Made — Priority Order
 
 This is the most important table in this guide. Follow this order every time:
