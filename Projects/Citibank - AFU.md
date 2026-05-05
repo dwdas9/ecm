@@ -15,6 +15,8 @@ The stack we built on was EMC Captiva InputAccel for the capture side and EMC Do
 
 The business case was clear. Reduce cost, improve processing speed, eliminate manual retrieval bottlenecks, and give the processing team real-time access to every document without ever leaving their primary system. We achieved all of it.
 
+![](images/20260505004548.png)
+
 ---
 
 ## 2. Business Overview
@@ -249,13 +251,11 @@ Other settings I locked in:
 - Automatically delete empty batches: enabled.
 - Batch page limit: 8000 pages for 16-bit modules.
 
-![](images/20260505002143.png)
+![alt text](images/Picture1.png)
 
-![](images/20260505002150.png)
+![alt text](images/Picture2.png)
 
-![](images/20260505002158.png)
-
-
+![alt text](images/Picture3.png)
 
 ### 11.4 Image Enhancement (IE) Module
 
@@ -272,7 +272,7 @@ Six filters, applied in sequence to every page:
 
 The IE module has a real-time preview in the setup UI — you can load a sample document image and see exactly what each filter does before/after. I used this extensively during configuration to tune the filter chain against the actual document stock the bank was scanning.
 
-![](images/20260505002209.png)
+![alt text](images/Picture5.png)
 
 
 
@@ -326,9 +326,9 @@ The "Replace on re-export" setting was a deliberate idempotency decision. If a b
 
 The rule I enforced absolutely: **a batch is never, under any circumstances, marked ready for deletion until every single document in it has confirmed a successful export.** One failed image means the entire batch stays put.
 
-![](images/20260505002353.png)
+![alt text](images/DctmSetup.png)
 
-![](images/20260505002359.png)
+
 ### 11.10 Timer Module — Scheduled Batch Deletion
 
 Three rules, running from 02:00 each morning:
@@ -387,6 +387,8 @@ The index schema captures metadata at three distinct granularities, each appropr
 **Document level (Level 1)** — `RefNo` and `BusinessType`. One application number, one business type, per logical document. This is critical: putting `RefNo` at the document level is what enables the system to link supporting documents to parent applications. If it were at the page level, that link would be harder to enforce reliably.
 
 **Page level (Level 0)** — `DocumentType`, `TransactionType`, `Priority`, and `Holder`. These can vary per page when needed, giving fine-grained control over multi-document-type submissions.
+
+![alt text](images/Picture10.png)
 
 ### 12.4 Validation — Why I Was Strict About It
 
