@@ -1,10 +1,3 @@
----
-description: >-
-  A comprehensive technical examination of deployment behavior evolution in Captiva 7.5.
-  Explores the architectural shift from legacy administrator-driven deployments to
-  designer-centric workflows, with practical guidance on feature availability and constraints.
----
-
 # Deployment Architecture in Captiva 7.5: Designer vs. Administrator
 
 ## Introduction

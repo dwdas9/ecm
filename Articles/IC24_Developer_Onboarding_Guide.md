@@ -1,10 +1,3 @@
----
-description: >-
-  What I wish someone had told me before spending two weeks trying to
-  port a Captiva 7.x solution onto IC 24. Written for engineers who already
-  know their way around InputAccel.
----
-
 # Migrating from Captiva 7.x to Intelligent Capture 24.x
 
 ## Table of Contents
