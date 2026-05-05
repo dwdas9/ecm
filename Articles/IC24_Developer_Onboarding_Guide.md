@@ -11,18 +11,20 @@ description: >-
 
 ## Table of Contents
 
-1. [Mental Model Reset — Captiva Then vs. Now](#1-mental-model-reset)
-2. [Internal Architecture Deep Dive](#2-internal-architecture-deep-dive)
-3. [Pipeline Execution Model — Old vs. New](#3-pipeline-execution-model)
-4. [Development Model — Critical Section](#4-development-model)
-5. [Integration Patterns](#5-integration-patterns)
-6. [Recognition and AI Evolution](#6-recognition-and-ai-evolution)
-7. [Migration Mindset — Practical Guidance](#7-migration-mindset)
-8. [Critical Extension Points](#8-critical-extension-points)
-9. [Deprecation Quick Reference](#9-deprecation-quick-reference)
-10. [Getting Productive — First Steps](#10-getting-productive)
+1. [Mental Model Reset — Captiva Then vs. Now](#section-1)
+2. [Internal Architecture Deep Dive](#section-2)
+3. [Pipeline Execution Model — Old vs. New](#section-3)
+4. [Development Model — Critical Section](#section-4)
+5. [Integration Patterns](#section-5)
+6. [Recognition and AI Evolution](#section-6)
+7. [Migration Mindset — Practical Guidance](#section-7)
+8. [Critical Extension Points](#section-8)
+9. [Deprecation Quick Reference](#section-9)
+10. [Getting Productive — First Steps](#section-10)
 
 ---
+
+<a id="section-1"></a>
 
 ## 1. Mental Model Reset
 
@@ -78,6 +80,8 @@ This is the table I built on day one to stop second-guessing terminology:
 | SOAP Web Services I/O | **WS Input / WS Output** (still ships) | Still works, but REST is the right choice for new integrations |
 
 ---
+
+<a id="section-2"></a>
 
 ## 2. Internal Architecture Deep Dive
 
@@ -178,6 +182,8 @@ The reserved values `IATaskRouting` and `IADepartments` still control department
 
 ---
 
+<a id="section-3"></a>
+
 ## 3. Pipeline Execution Model
 
 ### 3.1 What the IPP Model Was
@@ -224,6 +230,8 @@ Every time you instinctively reach for a `.NET Code` step, stop and ask: "Can th
 {% endhint %}
 
 ---
+
+<a id="section-4"></a>
 
 ## 4. Development Model
 
@@ -352,6 +360,8 @@ public class MyModule : IModule
 
 ---
 
+<a id="section-5"></a>
+
 ## 5. Integration Patterns
 
 ### 5.1 REST-Based Batch Ingestion
@@ -446,6 +456,8 @@ Standard Export with a built-in profile covers most targets: CMIS, Content Serve
 
 ---
 
+<a id="section-6"></a>
+
 ## 6. Recognition and AI Evolution
 
 In 7.x, recognition was entirely template-based. Train templates against sample images, define extraction zones, Dispatcher classifies by graphical and textual similarity scoring. Improving accuracy meant adding templates or manually tuning zone coordinates. I spent more time than I'd like to admit pixel-hunting zone definitions.
@@ -496,6 +508,8 @@ IEE profile names are case-sensitive. I've spent embarrassing amounts of time de
 {% endhint %}
 
 ---
+
+<a id="section-7"></a>
 
 ## 7. Migration Mindset
 
@@ -549,6 +563,8 @@ Profiles, document types, and recognition projects are reusable components deplo
 | Using the file-based internal database in production | ScaleServer, audit logging, and Web Services all fail | Use SQL Server external DB for production. File-based DB is for demos and local testing only. |
 
 ---
+
+<a id="section-8"></a>
 
 ## 8. Critical Extension Points
 
@@ -645,6 +661,8 @@ public void ProcessTask(IModuleTask task)
 
 ---
 
+<a id="section-9"></a>
+
 ## 9. Deprecation Quick Reference
 
 Things to migrate now, not when the next release breaks you.
@@ -686,6 +704,8 @@ Things to migrate now, not when the next release breaks you.
 | ScaleServer | Up to 8 servers, requires external SQL Server |
 
 ---
+
+<a id="section-10"></a>
 
 ## 10. Getting Productive
 
