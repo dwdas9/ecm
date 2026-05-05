@@ -1,156 +1,137 @@
 ---
 description: >-
-  A dense, high-signal onboarding guide for engineers migrating from
-  OpenText Captiva 7.x (InputAccel) to Intelligent Capture 24.x.
-  Not a beginner guide. Not a product manual.
+  What I wish someone had told me before spending two weeks trying to
+  port a Captiva 7.x solution onto IC 24. Written for engineers who already
+  know their way around InputAccel.
 ---
 
-# OpenText Intelligent Capture 24.x — Developer Onboarding Guide
-
-**Target audience:** Engineers with hands-on Captiva 7.x experience — IPPs, batch pipelines, Dispatcher, custom modules.\
-**Based on:** OpenText Intelligent Capture CE 24.2 (ECPCORE240200)
-
----
-
-## Who This Guide Is For
-
-You already know:
-
-* How IPPs sequence modules and wire IA values
-* How Dispatcher classifies and routes documents
-* How to write custom modules or VB/C# scripts against the InputAccel SDK
-* What a ScaleServer group is and why it exists
-
-What this guide does: **reset your mental model**. Most difficulty experienced by 7.x developers on IC 24 comes from mapping old patterns onto a system that has fundamentally changed its execution model.
+# Migrating from Captiva 7.x to Intelligent Capture 24.x
 
 ---
 
 ## Table of Contents
 
-1. [Mental Model Reset — Captiva Then vs. Now](ic24-developer-onboarding.md#1-mental-model-reset)
-2. [Internal Architecture Deep Dive](ic24-developer-onboarding.md#2-internal-architecture-deep-dive)
-3. [Pipeline Execution Model — Old vs. New](ic24-developer-onboarding.md#3-pipeline-execution-model)
-4. [Development Model — Critical Section](ic24-developer-onboarding.md#4-development-model)
-5. [Integration Patterns](ic24-developer-onboarding.md#5-integration-patterns)
-6. [Recognition and AI Evolution](ic24-developer-onboarding.md#6-recognition-and-ai-evolution)
-7. [Migration Mindset — Practical Guidance](ic24-developer-onboarding.md#7-migration-mindset)
-8. [Critical Extension Points](ic24-developer-onboarding.md#8-critical-extension-points)
-9. [Deprecation Quick Reference](ic24-developer-onboarding.md#9-deprecation-quick-reference)
-10. [Getting Productive — First Steps](ic24-developer-onboarding.md#10-getting-productive)
+1. [Mental Model Reset — Captiva Then vs. Now](#1-mental-model-reset)
+2. [Internal Architecture Deep Dive](#2-internal-architecture-deep-dive)
+3. [Pipeline Execution Model — Old vs. New](#3-pipeline-execution-model)
+4. [Development Model — Critical Section](#4-development-model)
+5. [Integration Patterns](#5-integration-patterns)
+6. [Recognition and AI Evolution](#6-recognition-and-ai-evolution)
+7. [Migration Mindset — Practical Guidance](#7-migration-mindset)
+8. [Critical Extension Points](#8-critical-extension-points)
+9. [Deprecation Quick Reference](#9-deprecation-quick-reference)
+10. [Getting Productive — First Steps](#10-getting-productive)
 
 ---
 
 ## 1. Mental Model Reset
 
-### 1.1 The Three Shifts
+The first week I spent on IC 24 was genuinely confusing — not because the product is hard, but because I kept trying to map 7.x concepts onto it. Once I stopped doing that, everything clicked. So before anything else: three assumptions from 7.x that you need to consciously set aside.
 
-Before touching any configuration or code, discard three deeply ingrained 7.x assumptions.
+### 1.1 The Three Shifts
 
 #### Shift 1 — Monolithic IPP Pipelines → CaptureFlow-Orchestrated Execution
 
-In 7.x, the **IPP** (Integrated ProcessFlow Project) was the backbone of every solution: a compiled script that sequenced every module in a hard-coded chain. Changing the sequence meant editing the IPP, recompiling, and redeploying.
+In 7.x, the IPP was the backbone of everything. A compiled script that sequenced every module in a hard-coded chain. If you needed to change the order or add a branch, you edited the IPP, recompiled, redeployed. Simple in theory, painful in practice the moment requirements changed.
 
-In IC 24, the equivalent artefact is the **CaptureFlow** — a graphical, configurable process model authored in **CaptureFlow Designer**. It is a directed graph of module steps (attended and unattended) that defines how batches are created and routed. It compiles to an IAP file. More importantly: CaptureFlow steps are **dynamically parameterized at runtime** via IA values, and conditional routing requires no scripting.
+In IC 24, the equivalent is the **CaptureFlow** — a directed graph of module steps authored graphically in CaptureFlow Designer. It compiles to an IAP file just like an IPP did, so the server-side mechanics are familiar. What's different is that CaptureFlow steps are dynamically parameterized at runtime via IA values, and conditional routing is just a connector expression — no scripting required.
 
 {% hint style="info" %}
-IPP files from Dispatcher 6.0 SP3, 6.5, and 6.5 SP1 can be imported into a Recognition design area in IC Designer if you hold an Advanced Recognition license. Field placements on existing templates are preserved. This is a one-time migration aid — maintain the result as a CaptureFlow going forward.
+If you have Dispatcher 6.5 or 6.5 SP1 DPP files, you can import them directly into a Recognition design area in IC Designer (needs the Advanced Recognition license). Field placements on existing templates survive the import. I used this to bootstrap a migration and it saved a lot of time. Just don't expect to maintain them as DPP files going forward — from that point it's all CaptureFlow.
 {% endhint %}
 
 #### Shift 2 — Script-Heavy Customization → Configuration-First Development
 
-In 7.x, the answer to almost every non-trivial requirement was a script — VBScript in the IPP, VBA in Dispatcher, custom COM modules, or .NET Quick Modules. Scripts were the primary lever for routing logic, validation, enrichment, and export control.
+In 7.x, the answer to almost every non-trivial requirement was a script. VBScript in the IPP, VBA in Dispatcher, .NET Quick Modules. Scripts were the primary lever for everything — routing logic, field validation, enrichment, export. If you were a 7.x developer worth their salt, you had a library of reusable script snippets.
 
-In IC 24, **the first question is always: can this be done in configuration?** The Designer's profiles, document type definitions, recognition projects, export profiles, and CaptureFlow connector conditions cover 80–90% of real-world requirements without a line of code. Code is reserved for logic that genuinely cannot be expressed through configuration.
+In IC 24, **the first question is always: can this be done in configuration?** And the answer is yes far more often than you'd expect. The Designer's profiles, document type definitions, recognition projects, export profiles, and CaptureFlow connector conditions cover the vast majority of real-world requirements. Code is reserved for what genuinely cannot be expressed through configuration.
 
 {% hint style="danger" %}
-Replicating 7.x script patterns directly in IC 24 is the single most common migration anti-pattern. It produces solutions that are harder to maintain, harder to upgrade, and miss the architectural intent of the platform. Read [Section 7](ic24-developer-onboarding.md#7-migration-mindset) before writing any code.
+Replicating 7.x script patterns directly in IC 24 is the single most common mistake I've seen experienced 7.x developers make. You end up with solutions that work but are unnecessarily complex, hard to upgrade, and miss the architectural intent of the platform. Read [Section 7](#7-migration-mindset) before writing any code.
 {% endhint %}
 
-#### Shift 3 — Thick Client Tools → Web-Based and API-Driven Interfaces
+#### Shift 3 — Thick Client Tools → Web-Based and API-Driven
 
-In 7.x, development happened in thick client tools: Dispatcher Designer, InputAccel Administrator, recognition project editors. In IC 24:
+In 7.x, everything happened in thick clients. Dispatcher Designer, InputAccel Administrator, recognition project editors. Operators ran thick client modules on dedicated workstations.
 
-* **IC Designer** is the centralized IDE for all design tasks (profiles, document types, recognition, export, CaptureFlows).
-* Operators use the **IC Web Client** (browser-based) or desktop Completion/ScanPlus modules.
-* The **IC REST Services** layer exposes the full capture and Module Server surface to external applications. New integrations default to REST.
+In IC 24, **IC Designer** is the centralized IDE for everything — profiles, document types, recognition, export, CaptureFlows. Operators use the **IC Web Client** in a browser, or the desktop Completion/ScanPlus modules if you need the full operator toolset. Anything that used to talk to the system via custom integrations should now use the **REST Service** layer. That's not aspirational — it's how the platform is designed to be consumed.
 
 ---
 
-### 1.2 Conceptual Equivalence Map
+### 1.2 The Conceptual Equivalence Map
 
-| Captiva 7.x | Intelligent Capture 24.x | Notes |
+This is the table I built on day one to stop second-guessing terminology:
+
+| Captiva 7.x | IC 24.x | Notes |
 |---|---|---|
 | IPP (Integrated ProcessFlow) | **CaptureFlow** (.IAP) | Graphical, compiled, deployed to IC Server |
-| Dispatcher project (.DPP) | **Recognition project** in IC Designer | Import DPP from Dispatcher 6.5/6.5 SP1 via Advanced Recognition |
-| InputAccel Server | **IC Server** | Identical role. Still called "InputAccel Server" internally in some APIs |
-| Dispatcher module (client service) | **Classification module** | Advanced Recognition license required |
-| NuanceOCR module | **NuanceOCR module** | Same module. AmpLib barcode engine removed in 24.2 |
-| Custom VB/C# IPP script | **.NET Code module step** (C# DLL) | VB.NET scripting is deprecated — migrate to C# |
-| Process Developer tool | **CaptureFlow Designer** | Process Developer no longer shipped in 24.x |
-| ScaleServer group (TCP/IP) | **ScaleServer group** (SQL Server-backed) | Same concept, requires external SQL Server DB |
+| Dispatcher project (.DPP) | **Recognition project** in IC Designer | Import DPP from Dispatcher 6.5/6.5 SP1 |
+| InputAccel Server | **IC Server** | Identical role. Still called "InputAccel Server" internally in some parts of the codebase |
+| Dispatcher module (client service) | **Classification module** | Requires Advanced Recognition license |
+| NuanceOCR module | **NuanceOCR module** | Same module, still ships. The AmpLib barcode engine was removed in 24.2 |
+| Custom VB/C# IPP script | **.NET Code module step** (C# DLL) | VB.NET is on its way out — write new code in C# |
+| Process Developer tool | **CaptureFlow Designer** | Process Developer is gone in 24.x, not just renamed |
+| ScaleServer group | **ScaleServer group** (SQL Server-backed) | Same concept, requires external SQL Server now |
 | MDF (Module Definition File) | **MDF** | Same format, unchanged |
-| IA values | **IA values** | Same categories. Dynamic IA values now support Unicode |
+| IA values | **IA values** | Same categories, same behavior. Dynamic IA values now support Unicode |
 | Thick client operator stations | **IC Web Client** or desktop Completion/ScanPlus/Identification | |
-| SOAP Web Services I/O | **WS Input / WS Output** (still ships) | Prefer IC REST Services for new integrations |
+| SOAP Web Services I/O | **WS Input / WS Output** (still ships) | Still works, but REST is the right choice for new integrations |
 
 ---
 
 ## 2. Internal Architecture Deep Dive
 
-IC 24 has two execution paths. Understanding which one applies to your scenario drives every design decision.
-
 ### 2.1 Component Overview
 
 | Component | Role | 7.x Equivalent |
 |---|---|---|
-| **IC Server** (InputAccel Server) | Central broker: manages batch lifecycle, schedules tasks, pushes tasks to production modules via TCP/IP | InputAccel Server — identical role |
-| **CaptureFlow Designer** | Centralized IDE: design, configure, compile, deploy CaptureFlows, profiles, document types, recognition projects, export profiles | Dispatcher Designer + IPP editor + Process Developer |
+| **IC Server** | Central broker: manages batch lifecycle, schedules tasks, pushes tasks to production modules via TCP/IP | InputAccel Server — genuinely identical |
+| **CaptureFlow Designer** | Centralized IDE: design, compile, deploy CaptureFlows, profiles, document types, recognition projects, export profiles | Dispatcher Designer + IPP editor + Process Developer combined |
 | **Production Modules** | Client-side Windows services or attended apps. Receive tasks from IC Server, process them, return results | InputAccel client modules |
-| **Module Server** | Windows service managing a pool of service module instances (classification, OCR, image conversion) for the REST subsystem. Scales horizontally | No direct equivalent — new in the REST era |
-| **IC REST Service** (IIS) | JSON REST web service on IIS. Accepts batch creation requests → routes to IC Server, or ad hoc page requests → Module Server | Web Services Hosting (partial analogy) |
-| **IC Web Client** | Browser-based operator interface. Calls IC REST Service under the hood | Thick client attended modules |
-| **SQL Server DB** (optional) | Configuration, batch metadata, licensing, audit logs, ScaleServer group state. Required for ScaleServer and reporting | Same optional external DB in 7.x ScaleServer |
+| **Module Server** | Windows service managing a pool of service module instances (classification, OCR, image conversion) for the REST subsystem. Scales by launching additional instances | No equivalent in 7.x — this is new |
+| **IC REST Service** (on IIS) | JSON REST endpoint. Routes batch creation requests to the IC Server, and ad hoc page requests to the Module Server | Web Services Hosting, but much more capable |
+| **IC Web Client** | Browser-based operator interface. Calls IC REST Service under the hood | Your desktop Completion/ScanPlus, but in a browser |
+| **SQL Server DB** (optional) | Configuration, batch metadata, licensing, audit logs, ScaleServer state. Required for ScaleServer and reporting | Same optional external DB from the 7.x ScaleServer era |
 
 ---
 
 ### 2.2 The Two Processing Paths
 
+This is something that took me a while to internalize because it has no clean analog in 7.x.
+
 {% tabs %}
 {% tab title="Path A — Async Batch (IC Server + Modules)" %}
-This is the traditional Captiva execution model, now expressed as a CaptureFlow.
+This is the traditional Captiva execution model expressed as a CaptureFlow. Everything you know from 7.x maps here.
 
-**Flow:**
-1. Batch is created (ScanPlus, Standard Import, WS Input, or IC REST Service)
-2. Batch stored on IC Server
+**How it works:**
+1. Batch is created — by ScanPlus, Standard Import, WS Input, or a REST call
+2. Batch sits on the IC Server
 3. IC Server schedules tasks and pushes them to available production module instances
-4. Modules process, return results, server advances to next CaptureFlow step
+4. Modules process, return results, server advances to the next CaptureFlow step
 
-**Characteristics:**
-- Asynchronous by design — the caller does not wait for completion
-- Batch nodes are locked during processing
-- Multiple module instances on different machines process tasks in parallel
-- Correct for high-volume, multi-stage workflows with operator review (Completion, Identification)
+**When to use this path:**
+- High-volume, multi-stage document workflows
+- Anything that involves operator review (Completion, Identification)
+- Any workflow where you need the full batch tree structure and IA value tracking
 
-{% hint style="info" %}
-This path is what your entire 7.x experience maps to. The internal mechanics (IA value triggers, stage files, task push model) are unchanged.
-{% endhint %}
+The internal mechanics — IA value triggers, stage files, the task push model — are unchanged from 7.x. This path will feel familiar.
 {% endtab %}
 
 {% tab title="Path B — Synchronous Real-Time (REST + Module Server)" %}
-New in the IC REST era. Designed for mobile, web, and LOB integrations.
+This is the path that has no 7.x equivalent. It exists to support real-time integrations from mobile apps, web apps, and LOB systems.
 
-**Flow:**
-1. External application calls IC REST Service via HTTPS
-2. **Batch request**: REST Service creates an IC batch, triggers CaptureFlow on IC Server
-3. **Ad hoc request**: REST Service forwards directly to Module Server → processes and returns results in the same HTTP call
+**How it works:**
+1. External app calls the IC REST Service over HTTPS
+2. **Batch request**: REST Service creates an IC batch and triggers a CaptureFlow — async, same as Path A but initiated via REST
+3. **Ad hoc request**: REST Service forwards directly to the Module Server, which processes and returns results in the same HTTP call
 
-**Characteristics:**
-- Synchronous for ad hoc requests (classify/extract a single page, return result in the HTTP response)
-- Module Server manages a pool of service instances; scales by launching additional instances
-- Correct for real-time capture in mobile apps, inline document processing in LOB systems
+**When to use this path:**
+- Classifying and extracting a single uploaded page and returning results immediately
+- Inline document processing inside a web or mobile application
+- Any scenario where the caller needs a synchronous result
 
 {% hint style="info" %}
-The two paths are not mutually exclusive. A REST-initiated batch runs through a CaptureFlow using production modules — Path B can feed Path A. The distinction is about how the batch is created and whether the caller needs a synchronous response.
+These two paths aren't mutually exclusive. A REST-initiated request can create a batch that then runs through a full CaptureFlow using Path A mechanics. The distinction is really about how the batch is initiated and whether the caller needs to wait for a result.
 {% endhint %}
 {% endtab %}
 {% endtabs %}
@@ -159,9 +140,7 @@ The two paths are not mutually exclusive. A REST-initiated batch runs through a 
 
 ### 2.3 The Batch Model
 
-The batch model is **unchanged** from 7.x. Understanding it precisely is required for all development work.
-
-A batch is a hierarchical tree of nodes with **up to 8 levels**:
+Unchanged from 7.x. A batch is a hierarchical tree of nodes with up to 8 levels:
 
 ```
 Level 7 — Batch (root)
@@ -174,133 +153,141 @@ Level 1 — Document
 Level 0 — Page (leaf)
 ```
 
-State is tracked via **IA values** attached to nodes. **Stage files** (images, OCR output, data files) are stored on the IC Server associated with nodes. The server uses **trigger IA values** to determine when a node is ready for the next step.
+State is tracked via **IA values** on nodes. **Stage files** (images, OCR output, data files) are stored on the IC Server associated with nodes. The server uses **trigger IA values** to determine when a node is ready for the next step — same push model you know from 7.x.
 
 {% hint style="info" %}
-The batch folder on disk is structured as `Batches\XXXX\YYY\ZZZ` based on batch ID split 4-3-3. Stage file extensions are sequential hex numbers per node (e.g., `23e.1`, `23e.2`). This is unchanged from 7.x and matters when debugging batch file issues directly.
+The batch folder on disk is still structured as `Batches\XXXX\YYY\ZZZ` based on batch ID split 4-3-3. Stage file extensions are still sequential hex numbers per node (`23e.1`, `23e.2`). If you're debugging a batch file issue directly on the server, this knowledge from 7.x still applies.
 {% endhint %}
 
 ---
 
-### 2.4 IA Values — The Nervous System
+### 2.4 IA Values
 
-IA values are the primary data transport mechanism. Every metadata value, routing decision, and file pointer flows through them. The categories are identical to 7.x:
+The same six categories, same behavior. I'll list them quickly for completeness:
 
-| Category | Purpose | Example |
+| Category | Purpose | Classic Example |
 |---|---|---|
-| **Input/Output file values** | Pointers to stage files. Connect module steps together | `InputImage`, `OutputImage` |
-| **Trigger values** | Subset of input file values. When all triggers are non-zero, module can process the task | `InputImage` (most common trigger) |
-| **Setup values** | Per-task configuration sent to the module. Can differ per task | OCR language, scanner settings, index field definitions |
+| **Input/Output file values** | Pointers to stage files; connect module steps | `InputImage`, `OutputImage` |
+| **Trigger values** | Subset of input file values; when all are non-zero, module can process the task | `InputImage` (most common trigger) |
+| **Setup values** | Per-task configuration pushed to the module; can differ per task | OCR language, scanner settings, index field definitions |
 | **Client processing results/statistics** | Output metadata from each module | Timestamps, operator name, OCR results, error codes |
-| **Batch values** | Dynamic values scoped to batch nodes, created at runtime | Custom counters, flags |
+| **Batch values** | Dynamic values scoped to batch nodes, created at runtime | Custom counters, flags set mid-pipeline |
 | **System values** | Global, not batch-scoped | `$user`, `$module`, `$machine`, `$server` |
-| **Non-MDF values** | Batch name, ID, priority, description | Appear in batch creation UI |
 
-The reserved values `IATaskRouting` and `IADepartments` still control department-based routing — the IC 24 equivalent of Dispatcher routing rules. Set them in CaptureFlow steps or dynamically in code.
+The reserved values `IATaskRouting` and `IADepartments` still control department-based routing — the IC 24 equivalent of the Dispatcher routing rules you were setting in 7.x. You can set them statically in a CaptureFlow step or dynamically from code.
 
 ---
 
 ## 3. Pipeline Execution Model
 
-### 3.1 7.x IPP Model — What It Was
+### 3.1 What the IPP Model Was
 
 {% tabs %}
-{% tab title="IPP Characteristics" %}
+{% tab title="7.x IPP Characteristics" %}
 - **Linear by default.** Branching required explicit IA value conditionals written in script.
-- **Stage-based with fixed points.** Changing step order required editing and recompiling the IPP.
-- **No graphical authoring.** Process Developer provided a view, but design was text/script-driven.
-- **Dispatcher owned classification routing.** The DPP was a separate artefact with its own VBA scripting environment.
+- **Stage-based with fixed points.** Changing step order meant editing and recompiling the IPP.
+- **No true graphical authoring.** Process Developer was a view onto the IPP, not a design tool.
+- **Dispatcher owned classification routing.** The DPP was a separate artefact with its own VBA scripting environment. Classification logic and routing logic were intertwined.
 - **Script was the extension mechanism.** Every non-trivial customization lived in IPP scripts or Dispatcher VBA.
 {% endtab %}
 {% endtabs %}
 
-### 3.2 IC 24 CaptureFlow Model — What Replaced It
+### 3.2 What CaptureFlow Replaced It With
 
 {% tabs %}
 {% tab title="CaptureFlow Characteristics" %}
-- **Graphical-first.** Steps are connected visually in CaptureFlow Designer. Conditional routing is configured via IA value expressions on connectors — no scripts.
-- **Configuration-driven parameterization.** Profiles, document types, and recognition projects are reusable service components uploaded separately. A step references them by name; they can be swapped without recompiling the CaptureFlow.
-- **Dynamic routing via IA values.** Set `IATaskRouting` or `IADepartments` in a preceding step to route tasks to specific module instances or departments.
-- **Process versioning.** The server maintains numbered version folders (`XPP`, `IAP`, `DLL`). Multiple versions coexist. Batches are pinned to the version that created them.
-- **Attended and unattended steps.** Unattended steps run as Windows services. Attended steps (Completion, Identification, ScanPlus) require a human.
+- **Graphical-first.** Steps are connected visually. Conditional routing is configured via IA value expressions on connectors — no script required for branching.
+- **Configuration-driven parameterization.** Profiles, document types, and recognition projects are reusable components uploaded separately. A step references them by name. Swap a profile without touching the CaptureFlow.
+- **Dynamic routing via IA values.** Set `IATaskRouting` or `IADepartments` in a preceding step to route tasks to specific module instances or departments — no Dispatcher equivalent needed.
+- **Process versioning.** The server maintains numbered version folders. Multiple versions of a process coexist. Batches are pinned to the version that created them.
+- **Attended and unattended steps.** Unattended steps run as Windows services. Attended steps (Completion, Identification, ScanPlus) require a human operator.
 {% endtab %}
 {% endtabs %}
 
 ---
-### 3.3 Where Decisions Are Made — Priority Order
 
-This is the most important table in this guide. Follow this order every time:
+### 3.3 Where Routing Logic Lives — Priority Order
 
-| Priority | Mechanism | When to Use |
+This is the most practically important table in this guide. I follow this order on every project:
+
+| Priority | Mechanism | When to Reach For It |
 |---|---|---|
-| **1st** | **CaptureFlow connector conditions** | IA value expressions on step transitions. No code. Use this first. |
-| **2nd** | **CaptureFlow step configuration** | Profiles control processing rules; document types enforce validation constraints |
-| **3rd** | **Recognition project rules** | Classification thresholds, extraction zone definitions, document separation |
+| **1st** | **CaptureFlow connector conditions** | IA value expressions on step transitions. No code, no compile. Use this first, always. |
+| **2nd** | **CaptureFlow step configuration** | Profiles control processing rules; document types enforce validation and field constraints |
+| **3rd** | **Recognition project rules** | Classification thresholds, extraction zones, document separation logic |
 | **4th** | **Client-side scripts in Completion/ScanPlus** | UI-level validation and field population specific to a document type |
-| **5th** | **.NET Code module step** | Logic that cannot be expressed by any of the above — external system calls, batch tree restructuring |
+| **5th** | **.NET Code module step** | Logic that genuinely cannot be expressed by any of the above — external calls, batch tree restructuring |
 | **6th** | **REST API integration** | External system lookups, validation, enrichment from outside the capture pipeline |
 
 {% hint style="warning" %}
-Every time you reach for a `.NET Code` module step, ask: "Can this condition be expressed as a CaptureFlow connector expression?" The connector expression evaluator supports IA value comparisons, string operations, and boolean logic — no code required.
+Every time you instinctively reach for a `.NET Code` step, stop and ask: "Can this condition be expressed as a CaptureFlow connector expression?" The connector expression evaluator supports IA value comparisons, string operations, and boolean logic. It handles more than you'd expect.
 {% endhint %}
 
 ---
 
 ## 4. Development Model
 
+This section is the one I would have most wanted to read on day one.
+
 ### 4.1 The Configuration Layer — Do This First
 
-The IC Designer provides design areas, each producing a **reusable service component** that can be uploaded to the server and referenced by multiple CaptureFlows:
+The IC Designer has design areas, each producing a **reusable service component** that gets uploaded to the server independently of any CaptureFlow:
 
 | Design Area | What You Build | 7.x Equivalent |
 |---|---|---|
-| **Image Processing** | Profiles: image enhancement filters, blank page detection, deskew, barcodes, annotations | Image Processor module setup |
+| **Image Processing** | Profiles: enhancement filters, blank page detection, deskew, barcodes, annotations | Image Processor module setup |
 | **Image Conversion** | Profiles: format conversion (TIFF→PDF, etc.), splitting, merging, color conversion | Image Converter module setup |
 | **Standard OCR** | Profiles: zonal/full-page OCR, OCR cache, PDF/text output | NuanceOCR zones and settings |
-| **Recognition** | Recognition projects: templates, classification logic, extraction zones, document separation. Import DPP files from Dispatcher 6.5/6.5 SP1. | Dispatcher project (.DPP) — direct equivalent |
-| **Document Types** | Index field definitions, validation rules, data entry form layout, field controls, indexing families | Completion field setup + Dispatcher index families |
+| **Recognition** | Recognition projects: templates, classification logic, extraction zones, document separation. Import DPP from Dispatcher 6.5/6.5 SP1 | Dispatcher project (.DPP) — direct equivalent |
+| **Document Types** | Index field definitions, validation rules, data entry form layout, field controls | Completion field setup + Dispatcher index families |
 | **Export** | Export profiles: CSV, XML, free text, email, CMIS, Content Server, AppEnhancer, Documentum, ODBC | Standard Export + Enterprise Export modules |
-| **CaptureFlow Designer** | The process model: step graph, IA value wiring, conditional routing, module assignments | Process Developer + IPP editor |
+| **CaptureFlow Designer** | The process model itself: step graph, IA value wiring, conditional routing | Process Developer + IPP editor |
+
+The key insight here is that these components are **reusable across CaptureFlows**. One Standard OCR profile shared by five CaptureFlows means one place to update OCR settings. Design them to be reused from the start.
 
 ---
 
-### 4.2 Scripting in IC 24 — Four Distinct Contexts
+### 4.2 The Four Scripting Contexts
 
-Mixing these up causes bugs that are hard to diagnose. Know which context you are in.
+This is where I see the most confusion from 7.x developers. There are four distinct scripting contexts, each with different scope and available APIs. Mixing them up causes bugs that are genuinely hard to diagnose.
 
 {% tabs %}
 {% tab title="Profile Scripting" %}
-**Scope:** Document types and page-level image enhancements. Completely independent of any specific process, batch, task, or IA values.
+**Scope:** Document types and page-level image enhancements. Completely decoupled from any specific process, batch, task, or IA values.
 
-**Rules:**
 - ❌ Do NOT access IA values, task objects, or process state
-- ✅ Correct use: field-level validation formulas, custom field controls, image annotation logic
-- Language: **C#** (VB.NET deprecated)
+- ✅ Use for: field-level validation formulas, custom field controls, image annotation logic
+- Language: **C#**
+
+Think of profile scripts as reusable library functions. They have no idea what CaptureFlow is running them.
 {% endtab %}
 
 {% tab title="Task Scripting" %}
-**Scope:** Task and batch node manipulation. Has access to IA values and the batch tree. Can call profile script APIs to manipulate document objects.
+**Scope:** Task and batch node manipulation. Has access to IA values and the batch tree. Can call profile script APIs.
 
-**Rules:**
 - ❌ Do NOT use profile scripting events or UI-related APIs
-- ✅ Correct use: batch-level IA value manipulation, node restructuring, routing decisions based on extracted data
-- Language: **C#** (VB.NET deprecated)
+- ✅ Use for: batch-level IA value manipulation, node restructuring, routing decisions based on extracted data
+- Language: **C#**
+
+This is the context that maps most closely to what you were doing in IPP scripts in 7.x.
 {% endtab %}
 
 {% tab title="Client-Side Scripting" %}
-**Scope:** Runs as part of a module step within a CaptureFlow, triggered by module-defined events. Does NOT require a separate CaptureFlow step.
+**Scope:** Runs as part of a module step inside a CaptureFlow, triggered by module-defined events. Does NOT need its own CaptureFlow step — it embeds into an existing one.
 
-**Rules:**
-- ✅ Correct use: operator UI event handlers, dynamic field visibility, validation popups, external lookups triggered during Completion
-- Language: **C#** (new CaptureFlows without existing VB.NET create C# only)
+- ✅ Use for: operator UI event handlers, dynamic field visibility, validation popups, external lookups triggered during Completion
+- Language: **C#** — if your CaptureFlow doesn't already have VB.NET scripting, new scripts are C# only
+
+This is the closest equivalent to the Completion event scripts you were writing in 7.x.
 {% endtab %}
 
 {% tab title="Recognition Scripting (VBA)" %}
-**Scope:** Customizing Classification and Identification recognition projects. Uses a VBA-compatible scripting environment with VBA Script Editor and debugger.
+**Scope:** Customizing Classification and Identification recognition projects. Uses a VBA-compatible environment with its own editor and debugger.
 
-**Rules:**
-- ✅ Correct use: custom classification thresholds, extraction post-processing, template logic
-- This is the context closest to the old Dispatcher VBA environment
+- ✅ Use for: custom classification thresholds, extraction post-processing, template logic
+- Language: **VBA**
+
+This is the scripting context closest to the old Dispatcher VBA environment. If you're coming from Dispatcher, this one will feel familiar.
 {% endtab %}
 {% endtabs %}
 
@@ -308,7 +295,7 @@ Mixing these up causes bugs that are hard to diagnose. Know which context you ar
 
 ### 4.3 The .NET Code Module Step
 
-The `.NET Code` module runs a custom .NET assembly (DLL) as an independent CaptureFlow step. It exposes a .NET interface to read and write batch data — IA values, batch nodes, stage files.
+The `.NET Code` module runs a custom C# DLL as an independent step in a CaptureFlow. It exposes a .NET interface to read and write batch data.
 
 ```csharp
 // Minimal entry point — implement IModule from InputAccel35.dll
@@ -322,47 +309,46 @@ public class MyModule : IModule
         // Read IA value from the batch node
         string custId = task.GetIAValue("CustomerID");
 
-        // Call external system, populate result
+        // Do something — call external system, transform data, etc.
         string custName = LookupCustomer(custId);
         task.SetIAValue("CustomerName", custName);
 
-        // Pass through the stage file to the next step
+        // Pass the stage file through to the next step
         task.SetOutputImage(task.GetInputImage());
     }
 }
 ```
 
-**Critical facts for .NET Code development:**
+**What I've learned about .NET Code module development:**
 
-| Requirement | Specification |
+| Requirement | What to Use |
 |---|---|
-| Target framework | **.NET 4.8** or higher |
+| Target framework | **.NET 4.8** or higher — non-negotiable |
 | SDK DLL | **`InputAccel.*35.dll`** — NOT `InputAccel.*.dll` (old SDK) or `InputAccel.QuickModule.dll` (SDK 5.x .NET 1.1) |
-| IDE | Visual Studio 2013+ (Professional or Standard recommended; Express has limited debugging) |
-| Deployment | Compile DLL → upload via IC Designer → CaptureFlow step references by name |
-| Custom module licensing | Modules with a Module ID/Name using network licensing must implement OTDS licensing APIs (SDK guide ECPCOREPK-PGD, section 2.8.3) |
+| IDE | Visual Studio 2013+ Professional or Standard. Express works but debugging is limited. |
+| Deployment | Compile DLL → upload in IC Designer → CaptureFlow step references it by name |
 
 {% hint style="warning" %}
-**SDK migration path for old custom modules:**
+**SDK migration — the three cases you'll encounter:**
 
-- **`IAClient32.dll` (COM, SDK 5.x)** → Cannot run on 24.x. Rewrite as `.NET Code` module step.
-- **SDK 5.x `.NET 1.1` (`InputAccel.QuickModule.dll`)** → Replace .NET 1.1 dependency with .NET 4.8, rebuild against `InputAccel.*35.dll`.
-- **IC 7.0–7.7 (`.NET 3.5` / `.NET 4.5.2`)** → May run as-is under .NET 4.8. Test with `QuickModuleHost.exe -modulename:<module>` before committing to a full rewrite.
+- **`IAClient32.dll` (COM, SDK 5.x)** → Cannot run on 24.x. Full rewrite as a `.NET Code` module step.
+- **SDK 5.x `.NET 1.1` (`InputAccel.QuickModule.dll`)** → Replace the .NET 1.1 dependency with .NET 4.8, rebuild against `InputAccel.*35.dll`.
+- **IC 7.0–7.7 (`.NET 3.5` or `.NET 4.5.2`)** → May run as-is under .NET 4.8. Test with `QuickModuleHost.exe -modulename:<yourmodule>` before committing to a rewrite. I've had these work without changes more often than I expected.
 {% endhint %}
 
 ---
 
-### 4.4 Config vs. Code vs. REST — Decision Table
+### 4.4 Config vs. Code vs. REST — When to Use What
 
 | Scenario | Right Approach | Wrong Approach |
 |---|---|---|
 | Route documents by document type | CaptureFlow connector condition on classification result IA value | Script to read IA value and set routing flags |
 | Validate a field against a regex pattern | Document type field property: regular expression constraint | Client-side script with regex logic |
-| Populate fields from external DB during indexing | Client-side script in Completion step OR .NET Code step | Custom module opening DB connection during task processing |
-| Export to a CMIS repository | Standard Export with CMIS profile | Custom export module built from scratch |
+| Populate fields from external DB during indexing | Client-side script in Completion step OR .NET Code step | Custom module that opens a DB connection during task processing |
+| Export to a CMIS repository | Standard Export with CMIS profile | Building a custom export module from scratch |
 | Complex batch tree restructuring (split/merge nodes) | Multi module (built-in) or .NET Code module | Client-side script (wrong scope) |
-| Classify and extract a single page in real time | IC REST API: `ClassifyExtractPage` on Module Server | Full async batch submitted to CaptureFlow |
-| Custom module with hardware integration | .NET Code module with `InputAccel35.dll` | COM module (`IAClient32.dll`) — not supported on 24.x |
+| Classify and extract a single page in real time | REST API: `ClassifyExtractPage` on Module Server | Full async batch submitted to a CaptureFlow |
+| Custom module with hardware integration | .NET Code module with `InputAccel35.dll` | COM module (`IAClient32.dll`) — not supported |
 
 ---
 
@@ -370,7 +356,7 @@ public class MyModule : IModule
 
 ### 5.1 REST-Based Batch Ingestion
 
-External applications submit documents to IC 24 by calling the IC REST Service. This replaces WS Input for new integrations.
+External systems submit documents to IC 24 by calling the IC REST Service:
 
 ```http
 POST /icws/rest/batch
@@ -379,17 +365,15 @@ Content-Type: multipart/form-data
 Body: process name, document files, IA values to pre-populate
 ```
 
-The caller receives a batch ID. The CaptureFlow processes asynchronously. The caller polls for batch status or uses event-based notification if configured.
+The caller gets back a batch ID. The CaptureFlow runs asynchronously. The caller polls for status or relies on event-based notification if you've configured that.
 
-{% hint style="info" %}
-WS Input (SOAP) still ships and is appropriate when maintaining legacy integrations or when the upstream system cannot use REST.
-{% endhint %}
+This replaces WS Input for new integrations. WS Input (SOAP) still ships and still works — keep it if you have legacy systems that can't talk REST, but don't build new integrations on it.
 
 ---
 
 ### 5.2 Ad Hoc Page Processing (Module Server)
 
-For synchronous classification and extraction **without creating a persistent batch**:
+For real-time, synchronous classification and extraction without creating a persistent batch:
 
 ```http
 POST /icws/rest/services/classify
@@ -397,138 +381,143 @@ POST /icws/rest/services/classifyextractpage
 POST /icws/rest/services/classifyextractdocument
 ```
 
-These endpoints accept an image or PDF, classify it against a deployed recognition project, optionally extract field data, and return structured results in the same HTTP response. Foundation for mobile capture and inline LOB processing.
+Send an image or PDF page, get back structured results in the same HTTP response. This is what you use for mobile capture apps and inline document processing inside LOB systems.
 
 {% hint style="info" %}
-**IC 24.2 addition:** New `defaultDocumentType` and `AllowedDocumentType` parameters on Classify, ClassifyExtractPage, and ClassifyExtractDocument REST APIs. Use these to constrain the classification result set when you already know the document type family in context.
+24.2 added `defaultDocumentType` and `AllowedDocumentType` parameters to the Classify and ClassifyExtract endpoints. Use these when you already know the document type family from context — it constrains the classification result and improves accuracy.
 {% endhint %}
 
 ---
 
 ### 5.3 External Validation and Enrichment During Capture
 
-The most common integration pattern during indexing. Choose the right variant:
+The most common integration question I get from teams migrating from 7.x: "how do I look up data from an external system during indexing?"
 
 {% tabs %}
 {% tab title="Pattern A — Client-Side Script (Operator-Triggered)" %}
-Write a C# client-side script attached to the `OnValidate` or button-click event in the Completion step. Script makes an HTTP call and populates field values.
+C# client-side script attached to the `OnValidate` event or a button in the Completion step. Script makes an HTTP call and populates field values or shows an error.
 
-**When to use:** Lookup is operator-triggered; result must be shown before commit; low latency acceptable (sync HTTP call on operator action).
+**Use when:** The lookup is triggered by an operator action, and the result needs to be shown before the operator commits. The operator is essentially clicking a "look up this value" button.
 
-**Avoid:** Long-running calls or calls that block the Completion UI for more than a few seconds.
+**Avoid:** Long-running calls. Anything that blocks the Completion UI for more than a couple of seconds will frustrate operators.
 {% endtab %}
 
 {% tab title="Pattern B — .NET Code Step (Automatic Enrichment)" %}
-Add a `.NET Code` module step before Completion in the CaptureFlow. Step reads IA values, calls the external system, writes results back as IA values for downstream steps.
+A `.NET Code` module step in the CaptureFlow, positioned before Completion. Reads IA values, calls the external system, writes results back as IA values for Completion to display.
 
-**When to use:** Enrichment should happen automatically, without operator involvement, as part of unattended processing.
+**Use when:** Enrichment should happen automatically before the operator even sees the document. No operator action should be required to trigger it.
 
-**Example:** Look up vendor in SAP by the vendor ID extracted during OCR; populate invoice metadata fields before Completion opens.
+**My most common use case:** Extract a vendor ID via OCR, look up vendor details in the ERP before the document ever reaches Completion, so the operator sees a pre-populated form.
 {% endtab %}
 
 {% tab title="Pattern C — WS Output/Input (Explicit Orchestration)" %}
-Use `WS Output` to call an external web service mid-pipeline and `WS Input` to receive the response.
+Use `WS Output` to call an external web service mid-pipeline, `WS Input` to receive the response.
 
-**When to use:** The external interaction must be modeled as an explicit CaptureFlow step for audit/compliance reasons, or the interaction has its own retry and error handling requirements.
+**Use when:** The external interaction needs to be a first-class step in the CaptureFlow for audit/compliance reasons, or when the interaction has its own retry requirements that you need to model explicitly.
 {% endtab %}
 {% endtabs %}
 
 ---
 
-### 5.4 ERP Lookup During Indexing — Concrete Example
+### 5.4 ERP Lookup During Indexing — Step by Step
 
-**Scenario:** After OCR extraction, look up a customer number in an ERP system and populate additional fields before Completion.
+Here's a concrete example I've implemented a few times. After OCR extraction, look up a customer number in an ERP system and populate additional fields before Completion.
 
 1. In the CaptureFlow, insert a `.NET Code` step **between** the Extraction step and the Completion step.
-2. In the `.NET Code` assembly: read `CustomerNumber` IA value, call the ERP REST API, parse the response, write `CustomerName`, `CustomerAddress`, `AccountType` IA values.
-3. In the Completion document type: mark `CustomerName`, `CustomerAddress`, `AccountType` as **read-only display fields** — they will be pre-populated from IA values when the operator opens the batch.
-4. On the CaptureFlow connector **after** the `.NET Code` step: add a condition — if `CustomerNumber` IA value is empty, route to an exception handling step instead of proceeding to Completion.
+2. In the `.NET Code` assembly: read `CustomerNumber` IA value, call the ERP REST API, parse the response, write `CustomerName`, `CustomerAddress`, `AccountType` back as IA values.
+3. In the Completion document type: mark `CustomerName`, `CustomerAddress`, `AccountType` as **read-only display fields** — they pre-populate from IA values when the operator opens the batch. The operator can see them but not accidentally edit them.
+4. On the CaptureFlow connector **after** the `.NET Code` step: add a condition — if `CustomerNumber` is empty, route to an exception handling step instead of proceeding to Completion. Don't let bad data silently reach the operator.
 
 ---
 
 ### 5.5 Custom Export
 
-**Standard Export with a built-in profile** covers most targets: CMIS, Content Server, AppEnhancer, Documentum, SharePoint, ODBC. For targets not covered:
+Standard Export with a built-in profile covers most targets: CMIS, Content Server, AppEnhancer, Documentum, SharePoint, ODBC. When none of those fit:
 
 | Approach | When to Use |
 |---|---|
-| **WS Output** | Target system accepts SOAP/REST and you want the interaction modeled as a CaptureFlow step |
-| **.NET Code step at batch/document level** | Full control over export logic — read stage files and IA values, construct payload, call target API |
-| **Standard Export free-text/XML profile → .NET Code** | Target accepts file-based import; generate the import file via Standard Export, then call the import API from a `.NET Code` step |
+| **WS Output** | Target accepts SOAP/REST and you want the interaction visible as a CaptureFlow step |
+| **.NET Code step at batch or document level** | Full control over export logic — read stage files and IA values, build the payload, call the target API |
+| **Standard Export free-text/XML → .NET Code** | Target accepts file-based import; generate the import file via Standard Export, then trigger the import from a `.NET Code` step |
 
 {% hint style="danger" %}
-**ApplicationXtender Export** (LiveLink Export to Content Server) is **deprecated** in 24.2. Migrate to Standard Export + AppEnhancer profile or Standard Export + Content Server profile respectively.
+**ApplicationXtender Export** and **LiveLink Export to Content Server** are both deprecated in 24.2. If you're inheriting a solution that uses either of these, migrate to Standard Export with the AppEnhancer profile or the Content Server profile respectively. Don't wait for a future release to break you.
 {% endhint %}
 
 ---
 
 ## 6. Recognition and AI Evolution
 
-In 7.x, recognition was entirely **template-based**: train templates against sample images, define extraction zones, Dispatcher classifies by graphical/textual similarity. Improving accuracy meant adding templates or tuning zones manually.
+In 7.x, recognition was entirely template-based. Train templates against sample images, define extraction zones, Dispatcher classifies by graphical and textual similarity scoring. Improving accuracy meant adding templates or manually tuning zone coordinates. I spent more time than I'd like to admit pixel-hunting zone definitions.
 
-IC 24 retains template-based recognition and adds **IEE (Information Extraction Engine)** — ML-assisted classification and extraction.
+IC 24 retains that template-based approach and adds **IEE (Information Extraction Engine)** — ML-assisted classification and extraction that learns from corrections.
 
-### 6.1 IEE vs. Template-Based Extraction
+### 6.1 IEE vs. Template-Based — When to Use Each
 
-| | Template-Based (Graphical) | IEE (ML-Assisted) |
+| | Template-Based | IEE (ML-Assisted) |
 |---|---|---|
-| **Classification** | Graphical similarity score against template images | Keyword analysis, image-based analysis, text string analysis, free-form recognition |
-| **Extraction** | Fixed pixel zones defined per template | Learned positions and patterns; no zone definitions required |
-| **Accuracy improvement** | Manual — add templates, tune zones | Automatic — continuous learning from operator corrections |
-| **Best for** | Highly structured, fixed-format documents (tax forms, standard invoices with fixed layouts) | Variable-format documents (invoices from multiple vendors, correspondence) |
-| **Developer effort** | High initial setup; low ongoing | Low initial setup; configure the learning pipeline once |
+| **Classification** | Graphical similarity against template images | Keyword, image, and text analysis combined |
+| **Extraction** | Fixed pixel zones per template | Learned positions; no zone definitions required |
+| **Improving accuracy** | Manual — add templates, tune zone coordinates | Automatic — learns from operator corrections in Completion |
+| **Best for** | Highly structured fixed-format documents (tax forms, standard invoices with fixed layouts) | Variable-format documents (invoices from 50 different vendors, mixed correspondence) |
+| **Initial setup effort** | High | Low |
+| **Ongoing effort** | Periodic manual tuning | Set up the learning pipeline once, then mostly hands-off |
+
+My rule of thumb: if every document of a type looks identical, use template-based. If documents vary in layout across sources, use IEE.
 
 ---
 
-### 6.2 Configuring the IEE Learning Loop
+### 6.2 The IEE Learning Loop
 
-The learning loop is the main operational difference from 7.x recognition. It requires three components in the CaptureFlow:
+This is the part that catches people off guard. IEE does not automatically improve just because operators are correcting documents in Completion. You have to explicitly configure the learning pipeline:
 
 ```
 [Extraction/Classification step]
-        ↓ (low-confidence result)
+         ↓ (low-confidence result)
 [Collector module step]  ← tags document as "collectable"
-        ↓
+         ↓
 [Completion step]  ← operator corrects extraction
-        ↓
-[Production Auto-Learning Supervisor service]  ← scheduled; creates new templates, updates field positions
+         ↓
+[Production Auto-Learning Supervisor]  ← scheduled service; creates new templates, updates field positions
 ```
 
-**Your job as a developer:**
-1. Configure the IEE profile in Designer (training set, document type mappings, thresholds).
-2. Add the Collector module step in the CaptureFlow for low-confidence paths.
-3. Configure the Production Auto-Learning Supervisor service to schedule learning runs.
-4. Do NOT manually define extraction zones for IEE document types — zones are learned.
+**As a developer, your job is:**
+1. Configure the IEE profile in Designer — training set, document type mappings, confidence thresholds.
+2. Add the Collector step in the CaptureFlow on the low-confidence path.
+3. Configure the Production Auto-Learning Supervisor service to run on a schedule.
+4. Do NOT define extraction zones for IEE document types — zones are learned, not configured.
 
 {% hint style="info" %}
-IC 24.2 added the **ResetIEETool** to reset IEE learning model data — classification learning, extraction learning per document type, and document separation learning. Use this when migrating an existing IEE configuration or when the model has degraded from bad training data.
+24.2 added the **ResetIEETool** for resetting IEE learning model data — classification learning, extraction learning per document type, and document separation learning. I've used this when migrating an existing IEE setup where the old training data was making the model worse rather than better. Fresh start, retrain from clean corrections.
 {% endhint %}
 
 {% hint style="warning" %}
-**Known issue (CAPC-13768):** IEE profile names are **case-sensitive**. Be consistent with naming in Designer and when referencing profiles in CaptureFlow steps.
+IEE profile names are case-sensitive. I've spent embarrassing amounts of time debugging what turned out to be a casing mismatch between the profile name in Designer and the reference in a CaptureFlow step. Be consistent from the start.
 {% endhint %}
 
 ---
 
 ## 7. Migration Mindset
 
+This section is blunt. These are the patterns that trip up 7.x developers on IC 24, and I've made most of them myself.
+
 ### 7.1 Stop Doing These Things
 
 #### ❌ Stop — Reaching for Scripts Before Configuration
 
-Every module step has a profile. Every profile has configurable options. Every document type has field-level validation rules, regex constraints, lookup tables, and auto-population formulas. The reflexive 7.x response of "I'll script this" is **wrong most of the time in IC 24**. Check the profile options first.
+Every module step has a profile. Every profile has configurable options. Every document type has field-level validation rules, regex constraints, lookup tables, and auto-population formulas. If you were a 7.x developer, your instinct is to script. Suppress that instinct until you've spent ten minutes in the relevant Designer area looking for a configuration option. Nine times out of ten you'll find one.
 
 #### ❌ Stop — Building Rigid, Linear CaptureFlows
 
-IC 24 CaptureFlows can branch, loop, and conditionally skip steps. Do not replicate a linear 7.x pipeline just because it's familiar. Design for the actual conditional logic the business requires — separate paths for different document types, exception branches for low-confidence extractions, expedited paths for high-priority batches — from the beginning.
+IC 24 CaptureFlows are directed graphs, not sequences. Don't replicate a linear 7.x pipeline just because it's familiar. Every real workflow has edge cases: what if classification confidence is below threshold? What if a required field is empty? What if this document type needs a different export target? Model those as branches from the beginning. Adding them later is painful.
 
 #### ❌ Stop — Using VB.NET for New Scripting
 
-VB.NET CaptureFlow scripting is planned for deprecation. New CaptureFlows without existing VB.NET scripts create new scripts in **C# only**. Do not invest in new VB.NET logic. Convert existing VB.NET scripts to C# using Visual Studio or a third-party converter.
+VB.NET CaptureFlow scripting is on the deprecation path. New CaptureFlows without existing VB.NET scripts only create new scripts in C#. Don't invest in new VB.NET logic. If you have old VB.NET scripts, convert them to C# — Visual Studio can do most of this automatically.
 
-#### ❌ Stop — Replicating the Dispatcher Architecture
+#### ❌ Stop — Trying to Reconstruct the Dispatcher Architecture
 
-Dispatcher combined classification, extraction, routing, and scripting into one VBA environment. In IC 24, these concerns are separated by design. Do not try to consolidate everything back into recognition scripting as a Dispatcher analog.
+Dispatcher combined classification, extraction, routing, and scripting into one VBA monolith. In IC 24, these concerns are intentionally separated: recognition projects own classification and extraction, CaptureFlow owns routing, scripts own custom logic. Don't fight the architecture. Trying to consolidate everything back into recognition scripting leads to exactly the kinds of unmaintainable solutions that made Dispatcher projects painful to hand off.
 
 ---
 
@@ -536,28 +525,28 @@ Dispatcher combined classification, extraction, routing, and scripting into one 
 
 #### ✅ Start — Designing Flows, Not Pipelines
 
-A CaptureFlow is a directed graph. Design from the business process outward: what are the possible document types? What happens when classification confidence is low? What happens when a required field is missing? Model these as branches from the beginning.
+Design from the business process outward. What are the possible document types coming in? What happens when classification confidence is low? What happens when validation fails? What's the exception path? Map all of that as branches before you write a single line of code. The CaptureFlow diagram IS the documentation for how your solution works.
 
 #### ✅ Start — Using REST as a First-Class Integration Point
 
-Any external system that triggers capture, queries batch status, or receives processed results should use the IC REST API. The REST surface has been significantly expanded and is the strategic integration path. SOAP works but is legacy.
+Any external system that needs to trigger capture, query batch status, or receive processed results should talk to the IC REST API. That's not just a preference — it's the strategic direction of the platform. Build new integrations on REST.
 
 #### ✅ Start — Thinking in Service Components
 
-Profiles, document types, and recognition projects are reusable service components deployed independently of CaptureFlows. Design them to be reused across multiple processes. A single Standard OCR profile referenced by five CaptureFlows means one place to update OCR settings.
+Profiles, document types, and recognition projects are reusable components deployed independently of CaptureFlows. Treat them like shared libraries. One well-designed Standard OCR profile used by five CaptureFlows is much easier to maintain than five slightly different copies. The Designer makes this easy — use it.
 
 ---
 
 ### 7.3 Common Pitfalls
 
-| Pitfall | Symptom | Correct Approach |
+| Pitfall | Symptom | Fix |
 |---|---|---|
-| Duplicating module setup per CaptureFlow step | Configuration change requires updating multiple steps | Create shared profiles in Designer. Reference the same profile from multiple steps. |
-| Writing .NET Code for routing logic | Business logic is buried in DLL source; CaptureFlow is unreadable | Use CaptureFlow connector conditions with IA value expressions. Reserve .NET Code for side-effecting operations. |
-| Ignoring the IEE feedback loop | IEE accuracy does not improve over time despite operator corrections | Configure the Collector module and Auto-Learning Supervisor. Corrections only feed the model if the collection pipeline is set up. |
-| Using deprecated export modules | Solutions break when modules are removed in future releases | Migrate ApplicationXtender Export → Standard Export + AppEnhancer profile. Migrate ODBC Export module → Standard Export + ODBC profile. |
-| Building custom modules with `IAClient32.dll` | Modules fail to load on 24.x clients | Migrate to .NET Code module step with `InputAccel35.dll` SDK. |
-| Using the file-based internal database in production | Audit logging, ScaleServer, and Web Services do not work | Use SQL Server external database for any production deployment. File-based DB is for evaluation/demo only. |
+| Duplicating profile config per CaptureFlow step | A settings change requires updating five different steps | Create shared profiles in Designer. Reference the same profile from multiple steps. |
+| Writing .NET Code for routing logic | Business logic is buried in DLL source; the CaptureFlow diagram is unreadable | Use CaptureFlow connector conditions. Reserve .NET Code for side-effecting operations (DB calls, file I/O, external API calls). |
+| Not configuring the IEE learning pipeline | IEE accuracy flatlines despite operator corrections | Set up the Collector step and Auto-Learning Supervisor. Corrections only feed the model if the collection pipeline exists. |
+| Using deprecated export modules | Solution breaks silently in a future upgrade | Migrate ApplicationXtender → Standard Export + AppEnhancer profile. Migrate ODBC Export module → Standard Export + ODBC profile. |
+| Building modules against `IAClient32.dll` | Module fails to load on 24.x client machines | Rewrite as .NET Code module with `InputAccel35.dll`. |
+| Using the file-based internal database in production | ScaleServer, audit logging, and Web Services all fail | Use SQL Server external DB for production. File-based DB is for demos and local testing only. |
 
 ---
 
@@ -566,56 +555,53 @@ Profiles, document types, and recognition projects are reusable service componen
 ### 8.1 .NET Code Module Interface
 
 ```csharp
-// Key references (from InputAccel35.dll)
+// Key namespaces — reference InputAccel35.dll
 using InputAccel.QuickModule;  // IModule, IModuleTask
 using InputAccel.IAValues;     // IA value read/write
 using InputAccel.Batch;        // Batch node navigation
 
-// Reading/writing IA values
+// Reading and writing IA values
 string value = task.GetIAValue("FieldName");
 task.SetIAValue("FieldName", "NewValue");
 
-// Reading input stage file, passing through to next step
+// Getting the input stage file and passing it through
 string inputStagePath = task.GetInputImage();
 task.SetOutputImage(inputStagePath);
 
-// Iterating child nodes (if triggered at document level, level 1)
+// Iterating child nodes (e.g., triggered at document level, level 1)
 foreach (IBatchNode page in task.CurrentNode.ChildNodes)
 {
     string pageStageFile = page.GetIAValue("OutputImage");
-    // process page...
+    // process each page...
 }
 ```
 
-**Deployment steps:**
+**Deployment:**
 1. Compile DLL targeting .NET 4.8, referencing `InputAccel.*35.dll`
-2. In IC Designer: CaptureFlow step → upload DLL
-3. The CaptureFlow step triggers at the level you specify (level 7 for batch-level, level 1 for document-level, level 0 for page-level)
+2. In IC Designer: upload DLL to the CaptureFlow step
+3. The step triggers at the level you set — level 7 for one call per batch, level 1 for one call per document, level 0 for one call per page
 
 ---
 
-### 8.2 REST Endpoints You Will Actually Use
+### 8.2 REST Endpoints You'll Actually Use
 
-| Endpoint | Use Case |
+| Endpoint | What It Does |
 |---|---|
 | `POST /icws/rest/batch` | Create a batch and trigger a CaptureFlow (async) |
 | `GET /icws/rest/batch/{batchId}` | Poll batch processing status |
-| `POST /icws/rest/services/classify` | Synchronously classify a page |
-| `POST /icws/rest/services/classifyextractpage` | Synchronously classify + extract fields from a page |
+| `POST /icws/rest/services/classify` | Synchronously classify a page against a recognition project |
+| `POST /icws/rest/services/classifyextractpage` | Synchronously classify + extract fields from a single page |
 | `POST /icws/rest/services/classifyextractdocument` | Synchronously classify + extract a multi-page document |
-
-Full REST API reference: *OpenText Intelligent Capture REST Services Development Guide v2.9* (available on My Support).
 
 ---
 
-### 8.3 External Call Pattern from Client-Side Script (Completion)
+### 8.3 External Call Pattern from a Client-Side Script
 
 ```csharp
-// C# client-side script attached to OnValidate event in Completion step
+// C# client-side script in a Completion step, attached to a field validation event
 using System.Net.Http;
 using System.Threading.Tasks;
 
-// Call external validation service
 private async Task<string> LookupVendor(string vendorId)
 {
     using var client = new HttpClient();
@@ -624,11 +610,11 @@ private async Task<string> LookupVendor(string vendorId)
     return await response.Content.ReadAsStringAsync();
 }
 
-// In event handler:
-// 1. Read field value from the Completion form
+// In your event handler:
+// 1. Read the field value from the Completion form
 // 2. Call LookupVendor()
-// 3. Parse JSON response
-// 4. Populate additional fields or set error message
+// 3. Parse the JSON response
+// 4. Populate additional fields or flag a validation error
 ```
 
 ---
@@ -637,7 +623,7 @@ private async Task<string> LookupVendor(string vendorId)
 
 ```csharp
 // .NET Code step triggered at document level (level 1)
-// Exports document to a custom target
+// One execution per document in the batch
 
 public void ProcessTask(IModuleTask task)
 {
@@ -649,10 +635,10 @@ public void ProcessTask(IModuleTask task)
     string vendorId      = task.GetIAValue("VendorID");
     string totalAmount   = task.GetIAValue("TotalAmount");
 
-    // Build payload and POST to target system
+    // Post to your target system
     PostToTargetSystem(imagePath, invoiceNumber, vendorId, totalAmount);
 
-    // Signal the step is done — pass through the image
+    // Signal done — pass the image through
     task.SetOutputImage(imagePath);
 }
 ```
@@ -661,22 +647,23 @@ public void ProcessTask(IModuleTask task)
 
 ## 9. Deprecation Quick Reference
 
-### 9.1 Deprecated / Removed in 24.2
+Things to migrate now, not when the next release breaks you.
 
-| Item | Status | Action Required |
+### 9.1 Already Deprecated or Removed in 24.2
+
+| Item | Status | What to Do |
 |---|---|---|
-| **Process Developer** | No longer shipped | Migrate all processes to CaptureFlow Designer |
-| **InputAccel SDK 5.x (`IAClient32.dll`, COM)** | Not supported | Rewrite as .NET Code module using `InputAccel35.dll` |
-| **InputAccel SDK 5.x (`.NET 1.1`)** | Must migrate | Replace with .NET 4.8, rebuild against `InputAccel.*35.dll` |
-| **VB.NET CaptureFlow scripting** | Deprecated — planned removal | Convert to C#; new CaptureFlows use C# only |
+| **Process Developer** | No longer shipped | Migrate processes to CaptureFlow Designer |
+| **`IAClient32.dll` (COM, SDK 5.x)** | Not supported on 24.x | Rewrite as .NET Code module using `InputAccel35.dll` |
+| **SDK 5.x `.NET 1.1`** | Must migrate | Replace with .NET 4.8, rebuild |
+| **VB.NET CaptureFlow scripting** | Deprecated, planned removal | Convert to C# |
 | **ApplicationXtender Export module** | Deprecated | → Standard Export + AppEnhancer profile |
 | **Export to Content Server (LiveLink)** | Deprecated | → Standard Export + Content Server profile |
 | **Copy module** | Deprecated | → Batch Copy module |
-| **East Euro / APAC OCR engine** | No longer shipped | → Advanced OCR/ICR engine or Standard OCR module |
-| **Nuance AmpLib barcode recognition** | Removed in 24.2 | Use other supported barcode recognition |
-| **Version 6.x licenses with IndexPlus/Validation** | Deprecated | Contact OpenText Support for no-charge license refresh |
+| **East Euro / APAC OCR engine** | No longer shipped | → Advanced OCR/ICR or Standard OCR module |
+| **AmpLib barcode recognition** | Removed in 24.2 | Use other supported barcode methods |
 
-### 9.2 To Be Deprecated in a Future Release
+### 9.2 Coming in a Future Release
 
 | Item | Replacement |
 |---|---|
@@ -685,44 +672,39 @@ public void ProcessTask(IModuleTask task)
 
 ---
 
-### 9.3 Platform Requirements Summary (IC 24.2)
+### 9.3 Platform Requirements (24.2)
 
 | Component | Requirement |
 |---|---|
 | IC Server OS | Windows Server 2022, 2019, or 2016 (64-bit) |
-| SQL Server (optional, required for ScaleServer/reporting) | SQL Server 2014 SP3 through SQL Server 2022 |
+| SQL Server (required for ScaleServer/reporting) | SQL Server 2014 SP3 through 2022 |
 | Client modules OS | Windows 10 Enterprise (1803+), Windows 11 Enterprise, or Windows Server 2022/2019/2016 |
-| .NET Framework | **4.8 or higher** on all server and client machines |
-| IC Designer | Requires .NET 4.8 Developer Pack **exclusively** — no other .NET version on the Designer machine |
+| .NET Framework | **4.8 or higher** everywhere |
+| IC Designer .NET requirement | .NET 4.8 Developer Pack **only** — no other .NET version on the Designer machine |
 | Web Client browsers | Chrome 94+, Firefox 94+, Microsoft Edge Chromium |
-| IIS (for REST Service) | IIS 7.5 through IIS 10 |
-| ScaleServer | Up to 8 servers; requires external SQL Server |
-| OTDS (for network licensing) | OTDS 24.2 for IC and Real Time OTDS-based network licenses |
+| IIS (REST Service) | IIS 7.5 through IIS 10 |
+| ScaleServer | Up to 8 servers, requires external SQL Server |
 
 ---
 
 ## 10. Getting Productive
 
-Follow this progression. Each step validates your understanding of the previous one.
+The order matters here. Each step validates the previous one.
 
-**Step 1 — Install IC Designer and read the Quick Start**\
-Work through *Designing a CaptureFlow* (Designer Guide, section 4) and the Quick Start: Creating a Simple Process (section 4.4). Half a day.
+**Step 1 — Walk through the Designer Quick Start**\
+Install IC Designer and build the Quick Start simple process. Half a day. Don't skip this even if you're experienced — the tooling has changed significantly from Process Developer.
 
-**Step 2 — Build and run the minimal CaptureFlow**\
-`Standard Import → Standard OCR → Standard Export`. Deploy it, create a test batch, run it end to end. This validates your environment and gives you a working baseline.
+**Step 2 — Run the minimal CaptureFlow end to end**\
+`Standard Import → Standard OCR → Standard Export`. Create a test batch, run it, check the output. This validates your environment before you build anything real on top of it.
 
 **Step 3 — Import your existing Dispatcher project**\
-Import a `.DPP` file (from Dispatcher 6.5/6.5 SP1) into a Recognition design area. Validate that templates and field placements were imported correctly before building on top of them.
+If you have DPP files from Dispatcher 6.5/6.5 SP1, import them into a Recognition design area. Validate that templates and field placements survived the import before building anything that depends on them.
 
 **Step 4 — Replace one 7.x script with configuration**\
-Pick one IPP script or custom module. Determine whether its logic can be replaced by a CaptureFlow connector condition, a profile setting, or a document type rule. Implement the replacement and compare output.
+Pick the simplest custom script or module from your existing solution. Determine whether its logic can be replaced by a CaptureFlow connector condition, a profile setting, or a document type rule. Usually it can. This exercise resets your instincts.
 
 **Step 5 — Write a minimal .NET Code step**\
-Read one IA value, call an external HTTP endpoint, write the result back to a different IA value. Build up from there. Start small — the runtime behavior of the step (trigger level, stage file passthrough) is more important than the business logic inside it.
+Read one IA value, call one external HTTP endpoint, write the result back to a different IA value. Start small. The runtime behavior of the step — trigger level, stage file passthrough — is more important to understand than the business logic inside it.
 
 **Step 6 — Call the REST API directly**\
-Hit `ClassifyExtractPage` with a sample document and see the synchronous JSON response. This is the foundation for all real-time integrations. Understand the response structure before designing any LOB integration.
-
----
-
-*Das*
+Hit `ClassifyExtractPage` with a sample document and look at the JSON response. Do this before designing any real-time integration. Understanding the response structure early saves a lot of backtracking later.
