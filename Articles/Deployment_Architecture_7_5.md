@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The shift from Captiva Administrator as the primary deployment tool to Captiva Designer marks a fundamental change in how capture processes move from development to production. Understanding this transition isn't just about learning new UI workflows—it's about grasping the architectural rationale behind why certain operations are now restricted, why others have been completely reimplemented, and how the platform's treatment of legacy processes creates a dual-path deployment model that must be navigated carefully.
+The shift from Captiva Administrator as the primary deployment tool to Captiva Designer marks a fundamental change in how capture processes move from development to production. Understanding this transition isn't just about learning new UI workflows-it's about grasping the architectural rationale behind why certain operations are now restricted, why others have been completely reimplemented, and how the platform's treatment of legacy processes creates a dual-path deployment model that must be navigated carefully.
 
 This article examines the deployment behavior changes introduced in Captiva 7.5, focusing on the technical constraints that emerge when CodeBehind processes encounter the legacy deployment feature set.
 
@@ -16,7 +16,7 @@ Captiva 7.5 introduces a critical distinction: processes are now classified as e
 
 In earlier versions, all processes were monolithic IPP files compiled as opaque binaries. Captiva Administrator could manipulate these binaries through well-defined administrator operations: copy, delete, rename, upgrade.
 
-CaptureFlows change this equation. A CaptureFlow compiles to an IAP file (still binary), but the supporting artifacts—CodeBehind script DLLs and autogen DLLs—exist as separate files in the process's SystemFiles directory. This decoupling creates a problem that legacy processes don't face: if you delete the IAP but leave the DLLs behind, or if you rename the IAP without updating the DLL references, the system becomes inconsistent.
+CaptureFlows change this equation. A CaptureFlow compiles to an IAP file (still binary), but the supporting artifacts-CodeBehind script DLLs and autogen DLLs-exist as separate files in the process's SystemFiles directory. This decoupling creates a problem that legacy processes don't face: if you delete the IAP but leave the DLLs behind, or if you rename the IAP without updating the DLL references, the system becomes inconsistent.
 
 The solution: restrict administrator operations on CodeBehind processes and require developers to use Captiva Designer instead, where deployment logic understands the full artifact graph and can maintain consistency automatically.
 
@@ -29,7 +29,7 @@ The foundation of this feature gating is a hidden column in the Captiva Administ
 - **Legacy flag checked**: Process uses traditional IPP architecture. All legacy deployment features are available.
 - **Legacy flag unchecked**: Process is CodeBehind-enabled (a CaptureFlow). Legacy deployment features are disabled.
 
-This column is hidden by default, but can be surfaced through the **Column Manager** dialog in the Processes view. The decision to hide it reflects that it's a diagnostic artifact—end users should not need to know this classification. However, developers and administrators must understand it to navigate feature availability.
+This column is hidden by default, but can be surfaced through the **Column Manager** dialog in the Processes view. The decision to hide it reflects that it's a diagnostic artifact-end users should not need to know this classification. However, developers and administrators must understand it to navigate feature availability.
 
 ![EMC Captiva Administrator Column Manager showing the Legacy column selection](images/fig_legacy_column.png)
 *Figure 1: The Column Manager dialog in EMC Captiva Administrator displays available columns for the Processes view. The "Legacy" column (highlighted in red) indicates process type: checked for legacy processes, unchecked for CodeBehind-enabled processes.*
@@ -125,7 +125,7 @@ Delete is the most complex operation in the matrix because its availability diff
 
 ### Legacy Processes
 
-For legacy processes, Delete removes the deployed IAP and associated files. The operation is unrestricted—there is no batch state check. This reflects the monolithic nature of legacy processes: the IPP is self-contained, so deletion is safe regardless of active batches.
+For legacy processes, Delete removes the deployed IAP and associated files. The operation is unrestricted-there is no batch state check. This reflects the monolithic nature of legacy processes: the IPP is self-contained, so deletion is safe regardless of active batches.
 
 ### CodeBehind Processes
 
@@ -149,7 +149,7 @@ By preventing deletion when active batches exist, the platform enforces an impor
 
 **Availability:** Legacy processes only
 
-The Rename operation changes the deployed process name on the server. For legacy processes, this is a file system rename operation—move the IAP file from one name to another and update the server's configuration.
+The Rename operation changes the deployed process name on the server. For legacy processes, this is a file system rename operation-move the IAP file from one name to another and update the server's configuration.
 
 For CodeBehind processes, the Name field in the Process Settings dialog is **read-only**. Attempting to edit it yields no effect.
 
@@ -166,7 +166,7 @@ Designer manages this constraint automatically: if you rename a process in Captu
 
 **Availability:** Legacy processes only
 
-The Copy Process operation deploys a single process from one server to multiple servers within a ScaleServer group. The UI presents two lists—Available Servers and Selected Servers—with directional arrows to move servers between them.
+The Copy Process operation deploys a single process from one server to multiple servers within a ScaleServer group. The UI presents two lists-Available Servers and Selected Servers-with directional arrows to move servers between them.
 
 ![Copy Process dialog showing multi-server deployment interface](images/fig_copy_process.png)
 *Figure 5: The Copy Process dialog in Captiva Administrator. It shows a process being copied (PERF(75)-2014-11-06 from KT-2012-IAS1), with Available Servers and Selected Servers lists and navigation buttons to move servers between them.*
@@ -247,7 +247,7 @@ Understanding this deployment model is critical for projects migrating from Capt
 
 1. **Legacy processes will continue to work** through IC 24 via backward compatibility, but they cannot be deployed or managed via the modern Designer-based tools.
 
-2. **Immediate decision**: When you begin a migration, you must decide which processes to port to CaptureFlow and which to keep as legacy. There is no mixed mode—once you convert a process to CaptureFlow, it leaves the legacy ecosystem entirely.
+2. **Immediate decision**: When you begin a migration, you must decide which processes to port to CaptureFlow and which to keep as legacy. There is no mixed mode-once you convert a process to CaptureFlow, it leaves the legacy ecosystem entirely.
 
 3. **Deployment becomes part of development**: In Captiva 7.x, deployment was often a separate step handled by administrators. In IC 24, deployment is integrated into the Designer workflow. Developers must understand deployment constraints because they affect design decisions.
 
@@ -259,10 +259,10 @@ Understanding this deployment model is critical for projects migrating from Capt
 
 ## Summary
 
-The deployment behavior changes in Captiva 7.5 reflect a broader architectural shift from administrator-centric to developer-centric process management. The legacy/CodeBehind distinction is not merely a UI feature gate—it is an expression of two fundamentally different process architectures and their respective deployment models.
+The deployment behavior changes in Captiva 7.5 reflect a broader architectural shift from administrator-centric to developer-centric process management. The legacy/CodeBehind distinction is not merely a UI feature gate-it is an expression of two fundamentally different process architectures and their respective deployment models.
 
 For developers coming from Captiva 7.x, the key insight is this: **do not use Captiva Administrator to manage CodeBehind processes**. The restrictions are not arbitrary limitations; they are guardrails that preserve system consistency and prevent silent failures. Use Captiva Designer for deployment, and use Designer's proactive sync for settings management.
 
-For administrators, the message is equally clear: **legacy processes are maintained for backward compatibility, but all new development should target CaptureFlow**. The restrictions on CodeBehind processes in Administrator are intended to be terminal—they are signs that you should be using Designer instead.
+For administrators, the message is equally clear: **legacy processes are maintained for backward compatibility, but all new development should target CaptureFlow**. The restrictions on CodeBehind processes in Administrator are intended to be terminal-they are signs that you should be using Designer instead.
 
 Understanding this distinction transforms what appears to be a confusing feature gate into a logical, defensible architectural boundary.

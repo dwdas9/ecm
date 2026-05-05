@@ -8,9 +8,9 @@
 
 | Version                        | Service Packs   |
 | ------------------------------ | --------------- |
-| EMC Captiva InputAccel 5.0     | —               |
-| EMC Captiva InputAccel 5.1     | —               |
-| EMC Captiva InputAccel 5.2     | —               |
+| EMC Captiva InputAccel 5.0     | -               |
+| EMC Captiva InputAccel 5.1     | -               |
+| EMC Captiva InputAccel 5.2     | -               |
 | EMC Captiva InputAccel 5.3     | SP1, SP2, SP3   |
 
 ---
@@ -21,9 +21,9 @@ In Captiva 6.0, MSSQL database support was introduced for the first time. Previo
 
 | Version                        | Release Date | Sustaining Support Start |
 | ------------------------------ | ------------ | ------------------------ |
-| EMC Captiva InputAccel 6.0     | —            | —                        |
-| EMC Captiva InputAccel 6.0 SP1 | —            | —                        |
-| EMC Captiva InputAccel 6.0 SP2 | —            | —                        |
+| EMC Captiva InputAccel 6.0     | -            | -                        |
+| EMC Captiva InputAccel 6.0 SP1 | -            | -                        |
+| EMC Captiva InputAccel 6.0 SP2 | -            | -                        |
 | EMC Captiva InputAccel 6.5     | 03/2011      | 03/2014                  |
 | EMC Captiva InputAccel 6.5 SP1 | 11/2011      | 03/2014                  |
 | EMC Captiva InputAccel 6.5 SP2 | 06/2013      | 01/2015                  |
@@ -35,7 +35,7 @@ In Captiva 6.0, MSSQL database support was introduced for the first time. Previo
 | Version                    | Release Date | Sustaining Support Start |
 | -------------------------- | ------------ | ------------------------ |
 | EMC Captiva Capture 7.0    | 12/2012      | 01/2016                  |
-| EMC Captiva Capture 7.1    | —            | —                        |
+| EMC Captiva Capture 7.1    | -            | -                        |
 | EMC Captiva Capture 7.5    | 06/2015      | 07/2019                  |
 | EMC Captiva Capture 7.6    | 11/2016      | 12/2020                  |
 
