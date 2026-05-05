@@ -1,4 +1,4 @@
-# AFU Data Capture and Enterprise Content Management Platform – Architecture and Implementation
+# AFU Data Capture and ECM Platform
 
 **Project Name:** AFU (Application Fulfilment Unit) Data Capture and Enterprise Content Management Platform 
 **Stream:** Loan Processing / Data Capture Solution
