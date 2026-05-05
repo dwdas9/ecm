@@ -209,6 +209,8 @@ That's the full picture of what production looked like — every combination of 
 
 The BANKING process is the core thick-client flow. Here's the module sequence:
 
+![](images/20260505004117.png)
+
 ```
 eScan / InputAccel Scan
         ↓
