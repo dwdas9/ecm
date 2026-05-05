@@ -21,7 +21,7 @@ I have operated in some of the most demanding ECM environments - government tax 
 
 | Area | Details |
 |---|---|
-| **Document Capture** | CaptureFlow design and development, multi-channel ingestion (MFD, scanner, email, network folder, web), Dispatcher Classification & Recognition, OCR, image enhancement, barcode separation |
+| **Document Capture** | CaptureFlow design and development, multi-channel ingestion (MFD, scanner, email, network folder, web), Captiva server and client modules |
 | **API & Custom Development** | REST/SOAP APIs (ASP.NET Core), .NET Code Modules, C# WinForms (InputAccal client), metadata validation DLLs, .NET Assembly Proxy, Oracle/SQL Server stored procedure integration, ADODB |
 | **Scripting & Automation** | PowerShell (VM health checks, service sequencing, deployments), Python, PySpark |
 | **Infrastructure & HA/DR** | MSCS Active/Active & Active/Passive clustering, SQL Server AlwaysOn, ScaleServer, Windows Server 2003–2022, IIS 6–10, Apache Tomcat, Docker |
