@@ -39,7 +39,11 @@ In Captiva 6.0, MSSQL database support was introduced for the first time. Previo
 | EMC Captiva Capture 7.5    | 06/2015      | 07/2019                  |
 | EMC Captiva Capture 7.6    | 11/2016      | 12/2020                  |
 
-Starting from version 7.7, the product was rebranded as OpenText Captiva Capture. All manuals released through version 7.6 carry the EMC Captiva Capture branding.
+**7.0:** IndexPlus, Validation, Image Enhancement, Multi-Directory Watch, Email Import (deprecated but functional and backward compatible)
+
+**7.5:** Removed entirely no backward compatibility, IndexPlus[Use completion module], Validation, Image Enhancement[Use image processor], Multi-Directory Watch[Use standard import], Email Import[Use standard import with email connector]. Process Developer still supported; But, microsoft removed support for VBA.
+
+**7.7:** Product manuals now title "OpenText Captiva Capture". Till 7.6, the manuals contained "EMC Captiva xx" in the title. No longer "EMC" in the product docs. But, all the folders IAvalues and may othr places will still contain word inputaccel.
 
 ---
 
