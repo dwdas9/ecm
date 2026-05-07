@@ -2,7 +2,7 @@
 
 **Project Name:** AFU (Application Fulfilment Unit) Data Capture and Enterprise Content Management Platform 
 **Stream:** Loan Processing / Data Capture Solution
-**Platform:** EMC Captiva InputAccel + EMC Documentum + ALPS
+**Platform:**  Captiva InputAccel +  Documentum + ALPS
 **My Role:** Principal Architect - solution design, module configuration, custom Java development, and system integration
 
 ---
@@ -11,11 +11,17 @@
 
 The Application Fulfilment Unit (AFU) was a large-scale initiative to fully digitise a bank's document management lifecycle - from the moment a customer's application form arrived at the branch counter through to repository storage, downstream processing, and eventual lifecycle cleanup.
 
-The core stack was EMC Captiva InputAccel for document capture and EMC Documentum as the content repository and BPM engine. These were integrated with the bank's internal loan processing platform, ALPS, via a custom Java background job and a SOAP/XML web service. I was responsible for the full solution - requirements through deployment.
+The core stack was  Captiva InputAccel for document capture and  Documentum as the content repository and BPM engine. These were integrated with the bank's internal loan processing platform, ALPS, via a custom Java background job and a SOAP/XML web service. I was responsible for the full solution - requirements through deployment.
 
 The objective was clear: reduce operational cost, eliminate manual retrieval bottlenecks, and give the processing team real-time access to every document without leaving their primary system.
 
 ![alt text](images/20260505004548.png)
+
+Before:
+![](images/20260507071819.png)
+
+After:
+![](images/20260507072149.png)
 
 ---
 
