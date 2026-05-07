@@ -1,11 +1,3 @@
-
-
-
-
-
-
----
-
 # Upgrading a Legacy SOAP Integration to REST on Azure
 ## A Step-by-Step Approach — AFU Project Case Study
 
