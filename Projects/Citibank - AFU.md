@@ -15,8 +15,6 @@ The core stack was  Captiva InputAccel for document capture and  Documentum as t
 
 The objective was clear: reduce operational cost, eliminate manual retrieval bottlenecks, and give the processing team real-time access to every document without leaving their primary system.
 
-![alt text](images/20260505004548.png)
-
 
 ![](images/20260507071819.png)
 
