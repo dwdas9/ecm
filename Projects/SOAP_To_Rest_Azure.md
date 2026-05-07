@@ -1,5 +1,5 @@
 # Upgrading a Legacy SOAP Integration to REST on Azure
-## A Step-by-Step Approach — AFU Project Case Study
+## A Step-by-Step Approach - AFU Project Case Study
 
 **By Dwaipayan Das**
 
@@ -25,17 +25,17 @@ This is the step-by-step approach I followed.
 
 Before touching any code, I identified what could not change:
 
-- The three validation rules — account check, populate, expiry date.
-- The response codes — `1000`, `1001`, `1002`, `1003`, `9999`.
-- The Captiva field being validated — `RefNo`.
-- The output fields — `CL0_eICVPrOTxt`, `CL0_eICVPrOTxt2`.
-- The operator experience — same messages, same pass/fail behaviour.
+- The three validation rules - account check, populate, expiry date.
+- The response codes - `1000`, `1001`, `1002`, `1003`, `9999`.
+- The Captiva field being validated - `RefNo`.
+- The output fields - `CL0_eICVPrOTxt`, `CL0_eICVPrOTxt2`.
+- The operator experience - same messages, same pass/fail behaviour.
 
 Everything else was replaceable. This list became the test criteria at the end.
 
 ---
 
-## Step 1 — Create the Azure SQL Database
+## Step 1 - Create the Azure SQL Database
 
 Before building the service, the database needs to exist.
 
@@ -76,7 +76,7 @@ v) Test the stored procedure directly in Query Editor with a known account numbe
 
 ---
 
-## Step 2 — Create the Azure App Service (API App)
+## Step 2 - Create the Azure App Service (API App)
 
 
 
@@ -87,16 +87,16 @@ ii) Fill in the details:
 | Setting | Value |
 |---|---|
 | Subscription | Your subscription |
-| Resource Group | Create new — name it something meaningful e.g. `Captiva` |
+| Resource Group | Create new - name it something meaningful e.g. `Captiva` |
 | Name | e.g. `captivavalidationsl210` |
 | Publish | Code |
 | Runtime stack | .NET 8 (LTS) |
-| Operating System | **Windows** — do not choose Linux |
+| Operating System | **Windows** - do not choose Linux |
 | Region | Match your Captiva server region |
 
 iii) Click **Review + create** → **Create**.
 
-iv) Once deployed, go to the resource. Note down the URL — it will be something like:
+iv) Once deployed, go to the resource. Note down the URL - it will be something like:
 ```
 https://captivavalidationsl210-[hash].canadacentral-01.azurewebsites.net
 ```
@@ -114,7 +114,7 @@ Server=tcp:[your-server].database.windows.net,1433;Initial Catalog=[db-name];Use
 
 ---
 
-## Step 3 — Create the Visual Studio Project
+## Step 3 - Create the Visual Studio Project
 
 ![](images/20260507134244.png)
 
@@ -138,16 +138,16 @@ v) Click **Create**.
 
 ---
 
-## Step 4 — Clean Up the Template
+## Step 4 - Clean Up the Template
 
-Delete the template sample files — they are not needed:
+Delete the template sample files - they are not needed:
 
 - `WeatherForecast.cs`
 - `Controllers/WeatherForecastController.cs`
 
 ---
 
-## Step 5 — Install the NuGet Package
+## Step 5 - Install the NuGet Package
 
 Right-click **Dependencies** → **Manage NuGet Packages** → **Browse** → search:
 
@@ -159,7 +159,7 @@ Install it. This replaces the old ADODB COM reference.
 
 ---
 
-## Step 6 — appsettings.json
+## Step 6 - appsettings.json
 
 Open `appsettings.json`. Replace with:
 
@@ -180,13 +180,13 @@ Open `appsettings.json`. Replace with:
 }
 ```
 
-> **Note:** Leave `CustomerDatabase` empty here. The actual connection string lives in the Azure App Service Application Settings you configured in Step 2. Locally, you can fill it in for testing only — never commit credentials to source control.
+> **Note:** Leave `CustomerDatabase` empty here. The actual connection string lives in the Azure App Service Application Settings you configured in Step 2. Locally, you can fill it in for testing only - never commit credentials to source control.
 
 > **Note:** `TCodesFilePath` and `DocTypesBasePath` are the INI file paths from the original service. If you have migrated these to Azure SQL configuration tables, replace with a table query instead. If keeping as files, upload them to an Azure File Share and mount it at the same path.
 
 ---
 
-## Step 7 — Create the Response Model
+## Step 7 - Create the Response Model
 
 Right-click the project → **Add** → **New Folder** → name it `Models`.
 
@@ -205,11 +205,11 @@ namespace CaptivaValidation.Models
 }
 ```
 
-This replaces the old `|%|%` delimited string response. The codes stay the same — `1000`, `1001`, `1002`, `1003`, `9999`. The format becomes JSON.
+This replaces the old `|%|%` delimited string response. The codes stay the same - `1000`, `1001`, `1002`, `1003`, `9999`. The format becomes JSON.
 
 ---
 
-## Step 8 — Create the Validation Controller
+## Step 8 - Create the Validation Controller
 
 Right-click `Controllers` → **Add** → **Controller** → **API Controller - Empty** → `ValidationController.cs`.
 
@@ -365,8 +365,8 @@ namespace CaptivaValidation.Controllers
                         : Ok(new ValidationResponse { Code = PASS_VALIDENTRY });
                 }
 
-                // Date provided — validate format and future date
-                // en-GB culture — same as original CultureInfo("en-GB")
+                // Date provided - validate format and future date
+                // en-GB culture - same as original CultureInfo("en-GB")
                 if (DateTime.TryParseExact(
                         validTill,
                         "dd/MM/yyyy",
@@ -450,7 +450,7 @@ namespace CaptivaValidation.Controllers
 
 ---
 
-## Step 9 — Test Locally
+## Step 9 - Test Locally
 
 i) Press **F5** to run. Swagger UI opens at `https://localhost:[port]/swagger`.
 
@@ -510,7 +510,7 @@ Do not proceed to Step 10 until all three endpoints return correct results local
 
 ---
 
-## Step 10 — Publish to Azure
+## Step 10 - Publish to Azure
 
 i) Right-click the project in Solution Explorer → **Publish**.
 
@@ -528,9 +528,9 @@ vii) Run the same tests from Step 9 against the live Azure endpoint. Confirm res
 
 ---
 
-## Step 11 — Update the Captiva Completion Module Script
+## Step 11 - Update the Captiva Completion Module Script
 
-This is the final step — updating the Captiva side to call the new REST endpoint instead of the old SOAP service.
+This is the final step - updating the Captiva side to call the new REST endpoint instead of the old SOAP service.
 
 The Completion module script replaces the old IndexPlus `IFieldEvents` DLL. The field collection logic and the response handling logic are the same. Only the service call changes.
 
@@ -560,10 +560,10 @@ var result   = System.Text.Json.JsonSerializer.Deserialize<ValidationResponse>(j
 
 switch (result.Code)
 {
-    case "1000": // New account — clear output fields, pass
-    case "1001": // Valid — write OutputTxt1/2 to CL0_eICVPrOTxt, pass
-    case "1002": // Invalid — show Message to operator, fail
-    case "1003": // Exception — show Message to operator, fail
+    case "1000": // New account - clear output fields, pass
+    case "1001": // Valid - write OutputTxt1/2 to CL0_eICVPrOTxt, pass
+    case "1002": // Invalid - show Message to operator, fail
+    case "1003": // Exception - show Message to operator, fail
 }
 ```
 
@@ -575,12 +575,12 @@ Deploy the updated Document Type script via Captiva Designer. Test against the s
 
 | Layer | Old | New |
 |---|---|---|
-| Database | Oracle — `CALLSL210PQ` PL/SQL | Azure SQL — `CALLSL210PQ` T-SQL |
+| Database | Oracle - `CALLSL210PQ` PL/SQL | Azure SQL - `CALLSL210PQ` T-SQL |
 | Data access | ADODB COM (`msado15.dll`) | `Microsoft.Data.SqlClient` |
-| Service type | ASMX SOAP — `Service1.asmx` | ASP.NET Core Web API — REST |
+| Service type | ASMX SOAP - `Service1.asmx` | ASP.NET Core Web API - REST |
 | Hosting | On-premises IIS, port 81 | Azure App Service (Windows), .NET 8 |
-| Client | `wsdl.exe` proxy — `SoapHttpClientProtocol` | `HttpClient` in Completion script |
-| Captiva module | IndexPlus — `IFieldEvents` DLL | Completion — Document Type script |
+| Client | `wsdl.exe` proxy - `SoapHttpClientProtocol` | `HttpClient` in Completion script |
+| Captiva module | IndexPlus - `IFieldEvents` DLL | Completion - Document Type script |
 | Response format | `\|%\|%` delimited string | JSON |
 | Response codes | `1000`, `1001`, `1002`, `1003`, `9999` | Unchanged |
 | Validation rules | Account check, expiry date | Unchanged |
