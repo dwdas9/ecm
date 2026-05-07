@@ -111,22 +111,22 @@ At 02:00 each morning, completed batches are deleted from the Captiva server aut
 
 ### 8.1 The Three Platforms
 
-**EMC Captiva InputAccel** handles document capture. It operates as a process-based server with configurable module chains - Scan, Image Enhancement, Quality Check, Index, Export - through which documents flow sequentially. It supports both a thick-client scanner for intranet use and a thin-client web-based scanner for internet access.
+** Captiva InputAccel** handles document capture. It operates as a process-based server with configurable module chains - Scan, Image Enhancement, Quality Check, Index, Export - through which documents flow sequentially. It supports both a thick-client scanner for intranet use and a thin-client web-based scanner for internet access.
 
-**EMC Documentum** is the permanent content repository. Documents are stored as typed objects in a hierarchical cabinet/folder structure with defined metadata attributes. Once a document lands in Documentum, the BPM engine routes it through the verification, approval, and processing workflow. Documentum also exposes the SOAP web services that ALPS uses to retrieve and update documents.
+** Documentum** is the permanent content repository. Documents are stored as typed objects in a hierarchical cabinet/folder structure with defined metadata attributes. Once a document lands in Documentum, the BPM engine routes it through the verification, approval, and processing workflow. Documentum also exposes the SOAP web services that ALPS uses to retrieve and update documents.
 
 **ALPS** is the bank's internal loan processing system - where credit officers, processors, and vendor teams operate. Before AFU, it had no visibility into the scanned document world. After AFU, it could retrieve any document from Documentum on demand via a web service call.
 
 ### 8.2 Infrastructure
 
-| Role | OS | Key Software |
-|---|---|---|
-| **Content Server** | AIX / Sun Solaris | Documentum Content Server 5.3 SP4, DFC, Connection Broker |
-| **Application Server** | AIX / Sun Solaris | WebSphere 6.x / WebLogic 9.2, DFC 5.3 SP4, Documentum Web Services |
-| **Oracle Repository** | AIX / Sun Solaris | Oracle 10g (Documentum's backend database) |
-| **Captiva Server** | Windows 2003 Server | Captiva InputAccel Server 5.3, InputAccel Client 5.3 |
+I originally architected the AFU platform on  Captiva InputAccel 5.3 and  Documentum 5.3 SP4, on AIX/Solaris with Oracle 10g and WebSphere 6.x/WebLogic 9.2. eInput ran through Internet Explorer; vendor access over leased lines.
 
----
+The solution went live with 18 active capture processes and remained stable in production.
+
+The stack was later upgraded to OpenText Captiva 7.x and Documentum 7.x, on RHEL with Oracle 19c. eInput moved off IE, the JSP silent login workaround was retired for native SSO, and vendor access moved to VPN.
+
+The module chain, CaptivaJob, object model, and ALPS web service contract carried forward unchanged.
+
 
 ## 9. How Business Documents Map to the System
 
@@ -226,7 +226,7 @@ Hold (Queue buffer before Index)
         ↓
 Index (Validation-based Indexing)
         ↓
-DctmExp / Export (EMC Documentum Server Export)
+DctmExp / Export ( Documentum Server Export)
         ↓
 Timer (Scheduled Batch Deletion at 02:00)
 ```
@@ -300,7 +300,7 @@ A second AQA-type module configured specifically for auto-rotation correction. T
 
 A queue buffer between the automated processing side and the operator-driven indexing side. It holds documents until an index operator picks them up - an explicit staging point for the handoff between automated and manual phases.
 
-### 11.9 Export Module - EMC Documentum Server Export
+### 11.9 Export Module -  Documentum Server Export
 
 **Docbase tab:**
 - Export mode: **Export to this Docbase** (pinned, not first logged-in)
