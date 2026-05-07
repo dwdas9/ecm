@@ -17,10 +17,10 @@ The objective was clear: reduce operational cost, eliminate manual retrieval bot
 
 ![alt text](images/20260505004548.png)
 
-Before:
+
 ![](images/20260507071819.png)
 
-After:
+
 ![](images/20260507072149.png)
 
 ---
