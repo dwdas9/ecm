@@ -79,7 +79,6 @@ v) Test the stored procedure directly in Query Editor with a known account numbe
 ## Step 2 — Create the Azure App Service (API App)
 
 
-![](images/20260507134942.png)
 
 i) In the Azure Portal, go to **Create a resource** → **Marketplace** → **API App**.
 
