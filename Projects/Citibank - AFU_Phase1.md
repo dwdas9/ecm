@@ -21,6 +21,9 @@ The objective was clear: reduce operational cost, eliminate manual retrieval bot
 
 ![](images/20260507072149.png)
 
+THis project initially started as Captia 5.3 then upgraded to 6.5 an then to 7.7. Documentum started at 5.3 SP4 and was later upgraded to 7.x. The module chain, object model, and ALPS web service contract carried forward unchanged through all upgrades.
+
+
 ---
 
 ## 2. Business Overview
@@ -179,7 +182,7 @@ Export assembles all pages of a document into a single multi-page TIFF, pushes i
 
 ## 11. Detailed Captiva Process Design
 
-### 11.1 What Was Running on the Server
+### 11.1 After deployment what wa the final list of proceses in the system?
 
 Opening the InputAccel Administrator shows 18 active processes - each representing a specific combination of product type, document category, and capture mode.
 
@@ -231,30 +234,6 @@ Timer (Scheduled Batch Deletion at 02:00)
 
 ### 11.3 Scan Module Configuration
 
-The batch tree hierarchy configured in the Scan Setup (Levels tab):
-
-| Level # | Type | Display Name |
-|---|---|---|
-| 7 | Batch | @{BatchName} |
-| 6 | Level 6 | Level6 (@6) |
-| 5 | Level 5 | Level5 (@5) |
-| 4 | Level 4 | Level4 (@4) |
-| 3 | Stack | Stack @3 |
-| 2 | Folder | Folder @2 |
-| 1 | Document | Document @1 |
-| 0 | Page | p. @0 |
-
-The critical setting is in the Event Actions tab. **Blank Page** events trigger a **New Document** action - this is how the physical blank-page separator becomes a logical document boundary in the batch tree. New Stack also triggers New Document.
-
-Other configuration:
-
-- Binary colour format, **CCITT Group 4** compression - standard for B&W document imaging, lossless.
-- Thumbnail size: Standard.
-- Page side rotation: 0 degrees front and back.
-- Primary and Secondary Process schema: both `BANKING`.
-- Automatically delete empty batches: enabled.
-- Batch page limit: 8000 pages for 16-bit modules.
-
 ![alt text](images/Picture1.png)
 
 ![alt text](images/Picture2.png)
@@ -263,26 +242,13 @@ Other configuration:
 
 ### 11.4 Image Enhancement (IE) Module
 
-Six filters applied sequentially to every scanned page:
-
-| Filter # | Name | Purpose |
-|---|---|---|
-| 1 | Deskew | Straightens pages scanned at a slight angle |
-| 2 | Border Removal | Removes scanner bed artefacts at page edges |
-| 3 | Smooth | Smooths jagged character edges |
-| 4 | Hole Removal | Removes punch-hole artefacts |
-| 5 | Noise Removal | Eliminates random pixel noise |
-| 6 | Blank Page Detection | Identifies blank separator pages for downstream deletion |
-
-The IE module provides a real-time preview in its setup UI - loading a sample document image shows the before/after effect of each filter. This was used extensively during configuration to tune the chain against the actual document stock being scanned.
+General IE filters were applied like Deskew, Border Removal, Smooth, Hole Removal, and Noise Removal. Blank page detectection was present which added IE IAValue. This was used by multi to delete the blank page and insert a doument level.
 
 ![alt text](images/Picture5.png)
 
 ### 11.5 Multi Module - Document Levelling and Blank Page Deletion
 
-The Multi module serves two purposes. First, it physically removes blank separator pages from the batch - they've served their purpose (triggering the New Document event) and are no longer needed. Second, it ensures the correct document level hierarchy is maintained in the batch tree as pages flow downstream.
-
-The three-stage sequence - IE detects the blank page → Scan's event action creates the document boundary node → Multi deletes the physical blank page - keeps each module's responsibility clearly bounded and avoids timing ambiguity in the pipeline.
+Multi deleted blank pages based on the IAValue set by IE. It also created a new document level for each blank page - this is what enabled the system to treat multi-page applications as single logical documents, with all pages linked together under the same Application Number.
 
 ### 11.6 AQA Module - Automatic Quality Assurance
 
