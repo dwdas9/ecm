@@ -133,7 +133,7 @@ The module chain, CaptivaJob, object model, and ALPS web service contract carrie
 
 ### 9.1 The Documentum Object Model
 
-I created a custom Documentum object type for this project: `citibank_captiva_doc`. Every scanned document - credit card application form, mortgage application, or supporting document - lands in Documentum as an instance of this type, stored within a `dm_cabinet` → `dm_folder` hierarchy in the Docbase `citi_pre_prod`.
+I created a custom Documentum object type for this project: `xxxxbank_captiva_doc`. Every scanned document - credit card application form, mortgage application, or supporting document - lands in Documentum as an instance of this type, stored within a `dm_cabinet` → `dm_folder` hierarchy in the Docbase `xxxx_pre_prod`.
 
 Three object sub-types capture the three document categories:
 
@@ -195,9 +195,9 @@ Opening the InputAccel Administrator shows 18 active processes - each representi
 | `eBANKING` | eInput-based thin-client version of the Banking process |
 | `CREDITCARD` | Credit card application processing |
 | `Einput - CC` | eInput variant for Credit Card |
-| `CITIBANK_CLASSIFIED_WITHOUTBARCODE_CC` | Classified CC docs without barcode |
-| `CITIBANK_SUPPORTING_CC` | Supporting docs for CC |
-| `CITIBANK_UNCLASSIFIED` | Unclassified documents |
+| `XXXXBANK_CLASSIFIED_WITHOUTBARCODE_CC` | Classified CC docs without barcode |
+| `XXXXBANK_SUPPORTING_CC` | Supporting docs for CC |
+| `XXXXBANK_UNCLASSIFIED` | Unclassified documents |
 | `MORTGAGE` | Mortgage/loan application processing |
 | `eMORTGAGE` / `eMORTGAGE_ADV_IDX` / `eMortgage2` / `eMORTGAGE3` | Various eInput mortgage process variants |
 | `_eInput1 - eScan + eIndex + Values to XML + eStatus` | eInput pilot/test process |
@@ -272,7 +272,7 @@ A queue buffer between the automated processing side and the operator-driven ind
 
 **Objects tab:**
 - Create/Search by object name
-- Object hierarchy: `dm_cabinet` → `dm_folder` → `citibank_captiva_doc`
+- Object hierarchy: `dm_cabinet` → `dm_folder` → `xxxxbank_captiva_doc`
 
 **Content tab:**
 - Export mode: **Export image files**
@@ -611,7 +611,7 @@ Step 4: The Content Server searches the repository (Docbase:
         Number and Document Type parameters.
 
 Step 5: The matching TIFF object is located in the
-        dm_cabinet/dm_folder/citibank_captiva_doc hierarchy.
+        dm_cabinet/dm_folder/xxxxbank_captiva_doc hierarchy.
 
 Step 6: The document content is retrieved and returned to the
         Application Server.
@@ -636,7 +636,7 @@ All communication between ALPS and Documentum uses server-to-server authenticati
 
 **Retrieve document:** An ALPS operator at any processing stage needs a customer's Form 16 for a mortgage application. ALPS sends the SOAP request with the Application Number and Document Type `supporting_doc`. Documentum locates and returns the TIFF. The operator sees the image inside ALPS within 2 seconds above baseline response time.
 
-**Update document attributes:** An operator marks a document as "Verified" or adds a processing remark. ALPS invokes the attribute update operation with the Application Number, Document Type, and updated values. Documentum updates the metadata on the `citibank_captiva_doc` object, and the updated state is visible to all subsequent processing stages.
+**Update document attributes:** An operator marks a document as "Verified" or adds a processing remark. ALPS invokes the attribute update operation with the Application Number, Document Type, and updated values. Documentum updates the metadata on the `xxxxbank_captiva_doc` object, and the updated state is visible to all subsequent processing stages.
 
 ### 14.F Why This Integration Matters
 
@@ -657,7 +657,7 @@ Captiva's DCTM Export module deposits documents into a single shared intermediat
 ### 15.2 Class Hierarchy
 
 ```
-com.citibank.afu.methods.captiva
+com.xxxxbank.afu.methods.captiva
     └── CaptivaJob  (extends CtbMethodBaseCaptiva)
             └── CtbMethodBase  (abstract base)
 ```
@@ -792,7 +792,7 @@ These formats allow full reconciliation between documents scanned and documents 
 11. Export module (DCTM Export):
     - Connects to Docbase: citi_pre_prod.
     - Assembles multi-page TIFF (CCITT Group 4, Binary, Multi-Page enabled).
-    - Creates/searches citibank_captiva_doc object in dm_cabinet/dm_folder hierarchy.
+    - Creates/searches xxxxbank_captiva_doc object in dm_cabinet/dm_folder hierarchy.
     - Uploads TIFF to intermediate folder in Documentum.
     - On error: automatically retries once; on retry failure: prompts operator.
     - Batch NEVER marked for deletion until all documents confirm successful export.

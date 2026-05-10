@@ -412,7 +412,7 @@ Case "1003" (Exception):
 
 The operator saw a green tick or a red error message with the exact text returned from Oracle. The document could not advance until the field passed validation.
 
-`CL0_eICVPrOTxt` and `CL0_eICVPrOTxt2` — the customer name fields populated from the Oracle response — were read by the Documentum Export step and written as the `customer_name` attribute on the `citibank_captiva_doc` object in the repository.
+`CL0_eICVPrOTxt` and `CL0_eICVPrOTxt2` — the customer name fields populated from the Oracle response — were read by the Documentum Export step and written as the `customer_name` attribute on the `xxxxbank_captiva_doc` object in the repository.
 
 ---
 

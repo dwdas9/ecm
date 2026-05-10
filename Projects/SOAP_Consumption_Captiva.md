@@ -3,7 +3,7 @@
 ## Server-Side Implementation, Proxy Generation, and Client-Side Consumption
 
 
-**Prepared By:** Dwaipayan Das. Architect for the Citibank AFU Project.
+**Prepared By:** Dwaipayan Das. Architect for the XXXXbank AFU Project.
 
 ## Preliminary Notes
 
