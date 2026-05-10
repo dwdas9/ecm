@@ -2,9 +2,8 @@
 # IACustomWebServices - Building the SOAP Web Service and Consuming It from Captiva
 ## Server-Side Implementation, Proxy Generation, and Client-Side Consumption
 
-**Dated:** `<TBD DAS>`
+
 **Prepared By:** Dwaipayan Das. Architect for the Citibank AFU Project.
----
 
 ## Preliminary Notes
 
